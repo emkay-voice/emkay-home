@@ -1,6 +1,6 @@
 // The house page (https): first start, log in, add an Emkay, the paired
 // Emkays, the language and the certificate.
-import { setLang, t, translate, when } from "./i18n.js";
+import { apply, setLang, t, when } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const show = (id, on = true) => $(id).classList.toggle("hidden", !on);
@@ -28,7 +28,7 @@ function guessLang(langs) {
   return langs[nav] ? nav : Object.keys(langs).find((c) => c.startsWith(nav.slice(0, 2))) || "en-us";
 }
 
-$("setup-lang").onchange = (e) => { setLang(e.target.value); translate(); };
+$("setup-lang").onchange = (e) => { setLang(e.target.value); apply(); };
 
 $("setup").onsubmit = async (e) => {
   e.preventDefault();
@@ -127,12 +127,42 @@ $("add").onsubmit = (e) => {
 $("qr-again").onclick = () => newCode($("add-name").value.trim() || $("add-name").placeholder);
 $("qr-close").onclick = closeQr;
 
+// --- Emkay, served from the house ---------------------------------------------
+
+let emkayTimer = null;
+
+async function emkay() {
+  clearTimeout(emkayTimer);
+  let s;
+  try { s = await api("/api/emkay"); } catch { return; }
+  const b = s.installed;
+  const busy = ["checking", "downloading", "unpacking"].includes(s.state);
+  let text;
+  if (s.mode === "url") text = t("emkay.url", { url: s.url });
+  else if (s.state === "downloading") text = t("emkay.downloading", { pct: s.progress == null ? "…" : `${Math.round(s.progress * 100)} %` });
+  else if (s.state === "unpacking") text = t("emkay.unpacking");
+  else if (s.state === "checking") text = t("emkay.checking");
+  else if (b) text = t("emkay.serving", { version: b.version, build: b.build, commit: b.commit });
+  else text = t("emkay.none");
+  if (s.state === "error") text += " " + t("emkay.error", { error: s.error });
+  $("emkay-state").textContent = text;
+  $("emkay-open").href = s.serving ? s.house_url : s.url;
+  show("emkay-open", s.mode === "url" || !!b);
+  show("emkay-update", s.mode === "house" && !busy);
+  if (busy) emkayTimer = setTimeout(emkay, 1500);
+}
+
+$("emkay-update").onclick = async () => {
+  await api("/api/emkay", {});
+  setTimeout(emkay, 300);
+};
+
 // --- language -----------------------------------------------------------------
 
 $("lang").onchange = async (e) => {
   await api("/api/lang", { lang: e.target.value });
   setLang(e.target.value);
-  translate();
+  apply();
   refresh();
   show("lang-saved");
   setTimeout(() => show("lang-saved", false), 2000);
@@ -156,8 +186,9 @@ async function start() {
     $("ca-fp").textContent = info.ca ? `SHA-256 ${info.ca.sha256}` : "";
     show("house");
     refresh();
+    emkay();
   }
-  translate();
+  apply();
 }
 
 start();

@@ -23,10 +23,11 @@ from pathlib import Path
 
 import tornado.web
 
-from . import hive, house, settings
+from . import hive, house, settings, site
 
 LOG = logging.getLogger("emkay-home")
 WEB = Path(__file__).parent / "web"
+LOCALE = Path(__file__).parent / "locale"
 
 SESSIONS = {}   # token -> expiry
 INVITES = {}    # code -> {"name", "expires", "paired"}
@@ -101,6 +102,27 @@ class Pair(Base):
         if not self.https:
             return self.redirect("/")   # the fragment (#t=…) stays in the browser
         self.page("pair.html")
+
+
+def locale_texts():
+    """{lang: {key: text}} from locale/<lang>/<key>.dialog – the layout of an
+    OVOS skill's dialogs, as in Emkay (tools/build_site.py there), so the
+    same translation tooling reads both. The first line is the text."""
+    out = {}
+    for d in sorted(LOCALE.iterdir()):
+        if d.is_dir():
+            out[d.name] = {f.name[:-len(".dialog")]: f.read_text(encoding="utf-8").splitlines()[0].strip()
+                           for f in sorted(d.glob("*.dialog"))}
+    return out
+
+
+TEXTS_JSON = json.dumps(locale_texts(), ensure_ascii=False).encode()
+
+
+class Texts(Base):
+    def get(self):
+        self.set_header("Content-Type", "application/json; charset=utf-8")
+        self.write(TEXTS_JSON)
 
 
 class Ping(Base):
@@ -240,8 +262,22 @@ class Redeem(Base):
         if st.get("lang"):
             link["lang"] = st["lang"]
         b64 = base64.b64encode(json.dumps(link).encode()).decode()
-        self.write({"url": f"{settings.EMKAY_URL}#hivemind={tornado.escape.url_escape(b64, plus=False)}",
+        self.write({"url": f"{site.emkay_url(self.request.host_name)}#hivemind={tornado.escape.url_escape(b64, plus=False)}",
                     "name": inv["name"]})
+
+
+class Emkay(Base):
+    """Emkay served from the house: which build, and fetching a newer one."""
+    def get(self):
+        self.need_login()
+        port = "" if settings.HTTPS_PORT == 443 else f":{settings.HTTPS_PORT}"
+        self.write({**site.status(), "url": site.emkay_url(self.request.host_name),
+                    "house_url": f"https://{self.request.host_name}{port}/emkay/"})
+
+    def post(self):
+        self.need_login()
+        asyncio.get_running_loop().create_task(site.update(force=bool(self.body().get("force"))))
+        self.write({"ok": True})
 
 
 def make_app():
@@ -259,5 +295,7 @@ def make_app():
         (r"/api/clients/remove", Remove),
         (r"/api/invite", Invite),
         (r"/api/redeem", Redeem),
+        (r"/api/emkay", Emkay),
+        (r"/static/texts\.json", Texts),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": str(WEB)}),
     ], xheaders=False)

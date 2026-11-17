@@ -18,72 +18,82 @@
 
   <!-- first start -->
   <form id="setup" class="card hidden">
-    <p class="lead" data-t="setup.lead"></p>
-    <label for="setup-lang" data-t="setup.lang"></label>
+    <p class="lead" data-i18n="setup.lead"></p>
+    <label for="setup-lang" data-i18n="setup.lang"></label>
     <select id="setup-lang" name="lang"></select>
-    <label for="setup-pw" data-t="setup.password"></label>
+    <label for="setup-pw" data-i18n="setup.password"></label>
     <input id="setup-pw" name="password" type="password" minlength="6" required autocomplete="new-password">
     <p class="error hidden" id="setup-error"></p>
-    <button type="submit" data-t="setup.start"></button>
+    <button type="submit" data-i18n="setup.start"></button>
   </form>
 
   <!-- log in -->
   <form id="login" class="card hidden">
-    <p class="lead" data-t="login.lead"></p>
-    <label for="login-pw" data-t="login.password"></label>
+    <p class="lead" data-i18n="login.lead"></p>
+    <label for="login-pw" data-i18n="login.password"></label>
     <input id="login-pw" name="password" type="password" required autocomplete="current-password">
-    <p class="error hidden" id="login-error" data-t="login.wrong"></p>
-    <button type="submit" data-t="login.go"></button>
+    <p class="error hidden" id="login-error" data-i18n="login.wrong"></p>
+    <button type="submit" data-i18n="login.go"></button>
   </form>
 
   <div id="house" class="hidden">
     <!-- add an Emkay -->
     <section class="card">
-      <h2 data-t="add.title"></h2>
+      <h2 data-i18n="add.title"></h2>
       <form id="add">
-        <p class="lead" data-t="add.lead"></p>
-        <label for="add-name" data-t="add.name"></label>
-        <input id="add-name" name="name" maxlength="40" data-t-placeholder="add.placeholder" autocomplete="off">
-        <button type="submit" data-t="add.show"></button>
+        <p class="lead" data-i18n="add.lead"></p>
+        <label for="add-name" data-i18n="add.name"></label>
+        <input id="add-name" name="name" maxlength="40" data-i18n-placeholder="add.placeholder" autocomplete="off">
+        <button type="submit" data-i18n="add.show"></button>
       </form>
       <div id="qr" class="qr hidden">
         <div id="qr-code"></div>
         <p id="qr-count" class="count"></p>
         <p id="qr-done" class="ok big hidden"></p>
         <div class="row">
-          <button id="qr-again" class="ghost hidden" data-t="add.again"></button>
-          <button id="qr-close" class="ghost" data-t="add.done"></button>
+          <button id="qr-again" class="ghost hidden" data-i18n="add.again"></button>
+          <button id="qr-close" class="ghost" data-i18n="add.done"></button>
         </div>
       </div>
     </section>
 
     <!-- the paired Emkays -->
     <section class="card">
-      <h2 data-t="list.title"></h2>
-      <p id="empty" class="note hidden" data-t="list.empty"></p>
+      <h2 data-i18n="list.title"></h2>
+      <p id="empty" class="note hidden" data-i18n="list.empty"></p>
       <ul id="emkays" class="emkays"></ul>
+    </section>
+
+    <!-- Emkay, served from the house -->
+    <section class="card" id="emkay-card">
+      <h2 data-i18n="emkay.title"></h2>
+      <p class="note" id="emkay-state"></p>
+      <div class="row">
+        <a class="button hidden" id="emkay-open" target="_blank" rel="noopener" data-i18n="emkay.open"></a>
+        <button class="ghost hidden" id="emkay-update" data-i18n="emkay.update"></button>
+      </div>
     </section>
 
     <!-- language -->
     <section class="card">
-      <h2 data-t="lang.title"></h2>
-      <p class="note" data-t="lang.lead"></p>
+      <h2 data-i18n="lang.title"></h2>
+      <p class="note" data-i18n="lang.lead"></p>
       <select id="lang"></select>
-      <p id="lang-saved" class="ok note hidden" data-t="lang.saved"></p>
+      <p id="lang-saved" class="ok note hidden" data-i18n="lang.saved"></p>
     </section>
 
     <!-- certificate -->
     <section class="card">
-      <h2 data-t="ca.title"></h2>
-      <p class="note" data-t="ca.lead"></p>
+      <h2 data-i18n="ca.title"></h2>
+      <p class="note" data-i18n="ca.lead"></p>
       <p class="fp" id="ca-fp"></p>
-      <a class="button ghost" href="/ca.crt" download="emkay-home.crt" data-t="ca.download"></a>
+      <a class="button ghost" href="/ca.crt" download="emkay-home.crt" data-i18n="ca.download"></a>
     </section>
 
-    <div class="row"><button id="logout" class="ghost" data-t="logout"></button></div>
+    <div class="row"><button id="logout" class="ghost" data-i18n="logout"></button></div>
   </div>
 
-  <footer data-t="footer"></footer>
+  <footer data-i18n="footer"></footer>
 </main>
 </body>
 </html>

@@ -1,7 +1,7 @@
 // The welcome page, over plain http: does this device trust the house's
 // certificate yet? If so, on to https (the house page, or – with a code
 // from a QR code – pairing). If not, help install it.
-import { setLang, t, translate } from "./i18n.js";
+import { apply, has, setLang, t } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 const code = (location.hash.match(/[#&]t=([\w-]+)/) || [])[1];
@@ -35,9 +35,9 @@ function guides() {
     const s = document.createElement("summary");
     s.textContent = t(`guide.${os}`);
     const ol = document.createElement("ol");
-    for (const step of t(`guide.${os}.steps`)) {
+    for (let i = 1; has(`guide.${os}.${i}`); i++) {
       const li = document.createElement("li");
-      li.textContent = step;
+      li.textContent = t(`guide.${os}.${i}`);
       ol.append(li);
     }
     d.append(s, ol);
@@ -65,7 +65,7 @@ async function check() {
 
 info = await (await fetch("/api/info", { cache: "no-store" })).json();
 setLang(info.lang);
-translate();
+apply();
 guides();
 $("continue").onclick = next;
 $("retry").onclick = check;

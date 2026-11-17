@@ -2,6 +2,7 @@
 #
 #   https://<house>/            the house page (set up, "Add an Emkay")
 #   https://<house>/hivemind    hivemind-core (wss://) for the Emkays
+#   https://<house>/emkay/      Emkay itself, served from the house
 #   http://<house>/             the welcome page: trust the house's certificate
 #   http(s)://<house>/ca.crt    the house's certificate (the root of its own CA)
 #
@@ -55,6 +56,13 @@ https:// {
 		reverse_proxy 127.0.0.1:{$HIVEMIND_PORT:5678}
 	}
 
+	# Emkay itself, as emkay-home downloaded it (a static site)
+	redir /emkay /emkay/ 308
+	handle_path /emkay/* {
+		root * /emkay-site/current
+		file_server
+	}
+
 	handle {
 		import page
 	}
@@ -62,6 +70,8 @@ https:// {
 
 http:// {
 	import ca
+	# Emkay needs https (the microphone); the welcome page helps get there
+	redir /emkay* https://{host}:{$HTTPS_PORT:443}{uri} 308
 	handle {
 		import page
 	}

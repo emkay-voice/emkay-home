@@ -15,8 +15,8 @@ ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_RO
 
 # the same uid as ovos-docker's ovos user, so the shared OVOS config is writable
 RUN groupadd --gid 1000 emkay && useradd --uid 1000 --gid 1000 -m emkay \
- && mkdir -p /data /ovos-config /home/emkay/.local/share/hivemind-core /home/emkay/.config/hivemind-core \
- && chown -R emkay:emkay /data /ovos-config /home/emkay
+ && mkdir -p /data /ovos-config /emkay-site /home/emkay/.local/share/hivemind-core /home/emkay/.config/hivemind-core \
+ && chown -R emkay:emkay /data /ovos-config /emkay-site /home/emkay
 
 COPY image/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt
@@ -27,7 +27,7 @@ RUN pip install --no-deps /src && rm -rf /src
 
 USER emkay
 WORKDIR /home/emkay
-VOLUME ["/data", "/home/emkay/.local/share/hivemind-core", "/home/emkay/.config/hivemind-core"]
+VOLUME ["/data", "/emkay-site", "/home/emkay/.local/share/hivemind-core", "/home/emkay/.config/hivemind-core"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8099/api/info', timeout=4)" || exit 1
