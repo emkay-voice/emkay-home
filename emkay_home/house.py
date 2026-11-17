@@ -64,16 +64,21 @@ def seed_ovos_profile():
             LOG.info("seeded %s", dst)
 
 
-def restart_ovos():
-    """Ask for ovos_core to be restarted (it loads a new language's skills
-    only when it starts). The restarter container does it: it alone has
-    Docker, and it can do nothing but restart ovos_core."""
+def request_restart(container):
+    """Ask for one of the house's containers to be restarted. The restarter
+    container does it: it alone has Docker, and it restarts only the few
+    containers it knows (compose: emkay_home_restarter)."""
     try:
         settings.REQUESTS.mkdir(parents=True, exist_ok=True)
-        (settings.REQUESTS / "restart-ovos_core").touch()
-        LOG.info("asked for ovos_core to be restarted")
+        (settings.REQUESTS / f"restart-{container}").touch()
+        LOG.info("asked for %s to be restarted", container)
     except OSError as e:
-        LOG.warning("could not ask for ovos_core to be restarted: %s", e)
+        LOG.warning("could not ask for %s to be restarted: %s", container, e)
+
+
+def restart_ovos():
+    """ovos_core loads a new language's skills only when it starts."""
+    request_restart("ovos_core")
 
 
 def set_ovos_lang(lang):

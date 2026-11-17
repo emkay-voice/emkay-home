@@ -3,6 +3,8 @@
 #   https://<house>/            the house page (set up, "Add an Emkay")
 #   https://<house>/hivemind    hivemind-core (wss://) for the Emkays
 #   https://<house>/emkay/      Emkay itself, served from the house
+#   https://<house>/speech/     speech in the house (Whisper, Piper) for the
+#                               paired Emkays, when the house page says so
 #   http://<house>/             the welcome page: trust the house's certificate
 #   http(s)://<house>/ca.crt    the house's certificate (the root of its own CA)
 #   https://<house>:8500/       the OpenVoiceOS control panel, behind Emkay
@@ -56,6 +58,30 @@ https:// {
 
 	handle_path /hivemind* {
 		reverse_proxy 127.0.0.1:{$HIVEMIND_PORT:5678}
+	}
+
+	# Speech in the house: only for a paired Emkay (its HiveMind key as a
+	# Bearer token) – emkay_home says yes or no. Emkay may come from
+	# app.emkay.ai as well as from here, so CORS: no cookies are involved.
+	handle /speech/* {
+		route {
+			header Access-Control-Allow-Origin "*"
+			header Access-Control-Allow-Headers "Authorization, Content-Type"
+			header Access-Control-Allow-Methods "GET, POST, OPTIONS"
+			@preflight method OPTIONS
+			respond @preflight 204
+			forward_auth 127.0.0.1:{$EMKAY_HOME_PORT:8099} {
+				uri /api/speech-auth
+				header_up X-Forwarded-Proto https
+			}
+			handle_path /speech/stt/* {
+				reverse_proxy 127.0.0.1:{$STT_PORT:8590}
+			}
+			handle_path /speech/tts/* {
+				reverse_proxy 127.0.0.1:{$TTS_PORT:8591}
+			}
+			respond 404
+		}
 	}
 
 	# Emkay itself, as emkay-home downloaded it (a static site)

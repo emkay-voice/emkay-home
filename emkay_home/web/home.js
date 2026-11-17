@@ -157,6 +157,40 @@ $("emkay-update").onclick = async () => {
   setTimeout(emkay, 300);
 };
 
+// --- speech: on the phones, or in the house ------------------------------------
+
+let speechTimer = null;
+
+async function speech(fill = true) {
+  clearTimeout(speechTimer);
+  let s;
+  try { s = await api("/api/speech"); } catch { return; }
+  const hw = s.hardware;
+  if (fill) {
+    for (const r of $("speech").elements.where) r.checked = r.value === s.where;
+    $("speech-model").replaceChildren(...s.models.map((m) => {
+      const o = new Option(m === s.suggested.model ? `${m} ★` : m, m);
+      o.selected = m === s.model;
+      return o;
+    }));
+  }
+  const where = t(s.suggested.where === "house" ? "speech.house" : "speech.phones").toLowerCase();
+  $("speech-machine").textContent = t("speech.machine", { cores: hw.cores, mem: hw.mem_gb ?? "?", gpu: hw.gpu ? t("speech.gpu") : "" })
+    + " " + t("speech.suggest", { where });
+  $("speech-state").textContent = t(`speech.${s.status.state}`);
+  $("speech-state").classList.toggle("ok", s.status.state === "ready");
+  if (s.status.state === "starting") speechTimer = setTimeout(() => speech(false), 3000);
+}
+
+$("speech").onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  await api("/api/speech", { where: f.get("where"), model: f.get("model") });
+  show("speech-saved");
+  setTimeout(() => show("speech-saved", false), 2000);
+  setTimeout(() => speech(false), 500);
+};
+
 // --- language -----------------------------------------------------------------
 
 $("lang").onchange = async (e) => {
@@ -164,6 +198,7 @@ $("lang").onchange = async (e) => {
   setLang(e.target.value);
   apply();
   refresh();
+  speech(false);
   show("lang-saved");
   setTimeout(() => show("lang-saved", false), 2000);
 };
@@ -194,6 +229,7 @@ async function start() {
     show("house");
     refresh();
     emkay();
+    speech();
   }
   apply();
 }

@@ -59,6 +59,14 @@ def add_client(name: str):
     return key, password
 
 
+def has_key(api_key: str) -> bool:
+    """Whether this is the access key of a paired Emkay (not a removed one)."""
+    if not api_key or api_key == "revoked":
+        return False
+    with _db() as db:
+        return any(_live(c) and secrets.compare_digest(c.api_key, api_key) for c in db)
+
+
 def delete_client(cid: str) -> bool:
     with _db() as db:
         for c in db:
