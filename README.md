@@ -32,14 +32,32 @@ Emkay Home:
 
 ## Get it
 
-You need a machine in the house that is always on – a Raspberry Pi 4/5 or
-an old PC – with Docker (or Podman).
+You need a machine in the house that is always on – a Raspberry Pi 4/5
+(64-bit), an old PC, a VM or a Proxmox LXC container – with Linux on it.
+Then one line ([emkay.ai/home](https://emkay.ai/home/) explains it all):
+
+```sh
+curl -fsSL https://emkay.ai/home.sh | bash
+```
+
+The installer ([`install/home.sh`](install/home.sh)) looks at the machine,
+installs Docker if it is missing (Debian, Ubuntu, Raspberry Pi OS, Fedora,
+CentOS/RHEL, Mint, Arch, openSUSE, Alpine), puts the setup in
+`/opt/emkay-home`, starts it, and ends with the address to open – and a QR
+code for the phone. Quietly: one line per step on the screen, everything
+else in `/tmp/emkay-home-install.log`. In Emkay's languages, after `$LANG`
+(or `--lang da`). Running it again updates; `… | bash -s -- --uninstall`
+removes it (and asks before deleting any data). In an LXC container, turn on
+*nesting* (and *keyctl* if unprivileged) – the installer tells you if it is
+missing.
+
+By hand, with Docker already there:
 
 ```sh
 git clone https://github.com/emkay-voice/emkay-home
 cd emkay-home/compose
 cp .env.example .env        # time zone, ports
-docker compose up -d        # or: podman compose up -d
+docker compose up -d
 ```
 
 Then open `http://<that machine>/` on a phone or PC on the same network and
@@ -138,8 +156,8 @@ service, and the house doesn't need the internet for its certificate.
 
 ## Roadmap
 
-- **Install script** for a Pi or an old PC, and a **Home Assistant add-on**
-  (next to [haos-ovos-addons](https://github.com/andlo/haos-ovos-addons)).
+- A **Home Assistant add-on** (next to [haos-ovos-addons](https://github.com/andlo/haos-ovos-addons)),
+  and a Proxmox helper that makes the LXC container itself.
 - **Hardware presets** ("private" / "fast", GPU detection), so nobody picks
   STT/TTS plugins by hand.
 - Screenshots in the certificate guide; native speakers' look at the texts.
