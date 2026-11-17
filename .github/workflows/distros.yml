@@ -1,0 +1,117 @@
+# The installer on many Linux distributions – the way a person runs it, on a
+# machine where Docker isn't there yet.
+#
+# Each distribution runs as a "machine": a privileged container booted with
+# its own init (systemd, or OpenRC on Alpine), ports 80/443 published, with
+# nothing but curl, bash and iproute2 added. Inside it the installer installs
+# Docker (get.docker.com, the distribution's packages, …), sets up Emkay Home
+# and starts it; then tools/smoke.py walks through the house from the runner.
+# The arm64 rows run on GitHub's arm runners (as on a Raspberry Pi 4/5).
+#
+# To add a distribution: a row in the matrix – its image, how to add
+# systemd/curl/iproute2 ("prep") and its init. The emkay.ai/home/ page lists
+# what is tested here.
+name: Distributions
+
+on:
+  push:
+    branches: [main]
+    paths: [install/**, compose/**, caddy/**, .github/workflows/distros.yml]
+  pull_request:
+    paths: [install/**, compose/**, caddy/**, .github/workflows/distros.yml]
+  workflow_dispatch:
+  schedule:
+    - cron: "41 4 * * 1"   # weekly: distributions move on without us
+
+jobs:
+  install:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # --- Debian family ---------------------------------------------------
+          - name: Debian 12
+            image: debian:12
+            prep: apt-get update && apt-get install -y systemd systemd-sysv curl iproute2 ca-certificates
+          - name: Debian 13
+            image: debian:13
+            prep: apt-get update && apt-get install -y systemd systemd-sysv curl iproute2 ca-certificates
+          - name: Debian 12 arm64 (as Raspberry Pi OS)
+            image: debian:12
+            runner: ubuntu-24.04-arm
+            prep: apt-get update && apt-get install -y systemd systemd-sysv curl iproute2 ca-certificates
+          - name: Ubuntu 24.04
+            image: ubuntu:24.04
+            prep: apt-get update && apt-get install -y systemd systemd-sysv curl iproute2 ca-certificates
+          - name: Ubuntu 24.04 arm64
+            image: ubuntu:24.04
+            runner: ubuntu-24.04-arm
+            prep: apt-get update && apt-get install -y systemd systemd-sysv curl iproute2 ca-certificates
+          - name: Linux Mint 22
+            image: linuxmintd/mint22-amd64
+            prep: apt-get update && apt-get install -y systemd systemd-sysv curl iproute2 ca-certificates
+          # --- Fedora / RHEL family -----------------------------------------------
+          - name: Fedora
+            image: fedora:latest
+            prep: dnf -y install systemd curl iproute procps-ng
+          - name: Rocky Linux 9
+            image: rockylinux/rockylinux:9
+            prep: dnf -y install --allowerasing systemd curl iproute procps-ng
+          - name: AlmaLinux 9
+            image: almalinux:9
+            prep: dnf -y install --allowerasing systemd curl iproute procps-ng
+          # --- Arch family ------------------------------------------------------------
+          - name: Arch Linux
+            image: archlinux:latest
+            prep: pacman -Syu --noconfirm systemd curl iproute2
+          - name: Manjaro
+            image: manjarolinux/base:latest
+            prep: pacman -Syu --noconfirm systemd curl iproute2
+          # --- openSUSE ---------------------------------------------------------------
+          - name: openSUSE Tumbleweed
+            image: opensuse/tumbleweed
+            prep: zypper -n install systemd curl iproute2 gawk tar gzip
+          - name: openSUSE Leap 15
+            image: opensuse/leap:15
+            prep: zypper -n install systemd-sysvinit curl iproute2 gawk tar gzip
+          # --- Alpine (OpenRC, not systemd) ------------------------------------
+          - name: Alpine
+            image: alpine:latest
+            init: /sbin/init
+            prep: apk add bash curl iproute2 openrc && sed -i 's/^#rc_sys=.*/rc_sys="docker"/' /etc/rc.conf
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the machine
+        run: |
+          init="${{ matrix.init || '/sbin/init' }}"
+          printf 'FROM %s\nRUN %s\nCMD ["%s"]\n' "${{ matrix.image }}" "${{ matrix.prep }}" "$init" > Machinefile
+          cat Machinefile
+          docker build -q -t machine -f Machinefile .
+
+      - name: Boot it
+        run: |
+          # its own network (its Docker makes its own docker0), with the
+          # house's two ports published on the runner
+          docker run -d --name machine --privileged --cgroupns=host -p 80:80 -p 443:443 \
+            -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v /var/lib/docker -v /lib/modules:/lib/modules:ro \
+            --tmpfs /run --tmpfs /tmp -e container=docker machine
+          sleep 8
+          docker exec machine sh -c 'cat /etc/os-release | head -3'
+
+      - name: Run the installer (as a person would, in Danish)
+        run: |
+          docker exec -e LANG=da_DK.UTF-8 machine bash -c \
+            "curl -fsSL https://raw.githubusercontent.com/emkay-voice/emkay-home/${{ github.event.pull_request.head.sha || github.sha }}/install/home.sh | bash -s -- --ref ${{ github.event.pull_request.head.sha || github.sha }}"
+
+      - name: Walk through the house
+        run: python3 tools/smoke.py "$(hostname -I | awk '{print $1}')"
+
+      - if: failure()
+        name: What happened
+        run: |
+          docker exec machine cat /tmp/emkay-home-install.log | tail -80 || true
+          docker exec machine docker compose --project-directory /opt/emkay-home/compose logs --no-color | tail -80 || true

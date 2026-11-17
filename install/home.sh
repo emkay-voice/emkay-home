@@ -593,23 +593,52 @@ esac
 
 # Per distribution family. get.docker.com (Docker's own script) where it is
 # supported; the distribution's packages elsewhere.
+#
+# The families (what CI tests is in .github/workflows/distros.yml):
+#   debian, ubuntu, raspbian, fedora, centos, rhel  get.docker.com
+#   rocky, almalinux (and other RHEL rebuilds)      Docker's CentOS repository
+#   linuxmint, pop, … (ID_LIKE ubuntu/debian)        the distribution's docker.io
+#   arch, manjaro, endeavouros (ID_LIKE arch)        pacman
+#   opensuse-*, sles                                 zypper
+#   alpine                                           apk + OpenRC
+docker_family() {
+  case "${ID:-}" in
+    debian|ubuntu|raspbian|fedora|centos|rhel) echo getdocker ;;
+    rocky|almalinux|ol|centos-stream) echo rhel-repo ;;
+    arch|manjaro|endeavouros|garuda|cachyos) echo pacman ;;
+    alpine) echo apk ;;
+    opensuse*|sles|sled) echo zypper ;;
+    *) case " ${ID_LIKE:-} " in
+         *" arch "*) echo pacman ;;
+         *" rhel "*|*" centos "*) echo rhel-repo ;;
+         *" fedora "*) echo getdocker ;;
+         *" ubuntu "*|*" debian "*) echo apt ;;
+         *suse*) echo zypper ;;
+         *) echo unknown ;;
+       esac ;;
+  esac
+}
+
 install_docker() {
-  case "${ID:-} ${ID_LIKE:-}" in
-    *debian*|*ubuntu*|*raspbian*|*fedora*|*centos*|*rhel*)
-      case "${ID:-}" in
-        debian|ubuntu|raspbian|fedora|centos|rhel|rocky|almalinux)
-          curl -fsSL https://get.docker.com | $SUDO sh ;;
-        *)   # Mint, Pop!_OS, … (ID_LIKE ubuntu/debian): the distribution's own
-          $SUDO apt-get update && $SUDO apt-get install -y docker.io docker-compose-v2 \
-            || $SUDO apt-get install -y docker.io docker-compose-plugin ;;
-      esac ;;
-    *arch*) $SUDO pacman -Sy --noconfirm --needed docker docker-compose ;;
-    *suse*) $SUDO zypper -n install docker docker-compose ;;
-    *alpine*) $SUDO apk add docker docker-cli-compose && $SUDO rc-update add docker default ;;
+  case "$(docker_family)" in
+    getdocker) curl -fsSL https://get.docker.com | $SUDO sh || return 1 ;;
+    rhel-repo)
+      $SUDO dnf -y install dnf-plugins-core \
+        && $SUDO dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
+        && $SUDO dnf -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin || return 1 ;;
+    apt)   # Mint, Pop!_OS, …: the distribution's own packages
+      $SUDO apt-get update && { $SUDO apt-get install -y docker.io docker-compose-v2 \
+        || $SUDO apt-get install -y docker.io docker-compose-plugin; } || return 1 ;;
+    pacman) $SUDO pacman -Sy --noconfirm --needed docker docker-compose || return 1 ;;
+    zypper) $SUDO zypper -n install docker docker-compose || return 1 ;;
+    apk)
+      $SUDO apk add docker docker-cli-compose && $SUDO rc-update add docker default \
+        && $SUDO rc-service docker start || return 1
+      return 0 ;;
     *) return 3 ;;
   esac
   # systemd only where it is running (not in every container); else the
-  # init script, as on Alpine or a minimal LXC
+  # init script, as in a minimal LXC
   if [ -d /run/systemd/system ]; then $SUDO systemctl enable --now docker
   else $SUDO service docker start; fi
 }
