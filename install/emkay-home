@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# emkay-home – look after Emkay Home on this machine.
+#
+#   emkay-home              the house: is it running, its address, a QR code
+#   emkay-home update       the newest Emkay Home (the same as the one line again)
+#   emkay-home logs [svc]   what the house is doing (Ctrl-C to stop); svc e.g. emkay_home
+#   emkay-home restart      start everything again
+#   emkay-home start | stop
+#   emkay-home uninstall    remove it (asks before deleting any data)
+#
+# Put here by the installer (install/home.sh, emkay.ai/home.sh), which also
+# fills in DIR below. The texts and the look are the installer's own: this
+# command runs the copy of it kept in $DIR/bin.
+set -o pipefail
+DIR="${EMKAY_HOME_DIR:-@DIR@}"
+[ "$DIR" = "@DIR@" ] && DIR=/opt/emkay-home
+
+SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo"
+DC="$SUDO docker compose --project-directory $DIR/compose -f $DIR/compose/docker-compose.yml"
+
+case "${1:-status}" in
+  status|"") exec bash "$DIR/bin/home.sh" --dir "$DIR" --status ;;
+  update)    curl -fsSL https://emkay.ai/home.sh | bash -s -- --dir "$DIR" ;;
+  logs)      shift; exec $DC logs -f --tail 100 "$@" ;;
+  restart)   exec $DC restart ;;
+  start)     exec $DC up -d --no-build ;;
+  stop)      exec $DC stop ;;
+  uninstall) exec bash "$DIR/bin/home.sh" --dir "$DIR" --uninstall ;;
+  -h|--help|help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *) echo "emkay-home: unknown command “$1” – see: emkay-home help" >&2; exit 2 ;;
+esac
