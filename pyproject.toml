@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "emkay-home"
+dynamic = ["version"]
+description = "Emkay Home – the OpenVoiceOS for the house that Emkays are satellites of"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.10"
+dependencies = ["hivemind-core", "segno>=1.6", "tornado"]
+
+[project.urls]
+Homepage = "https://emkay.ai"
+Source = "https://github.com/emkay-voice/emkay-home"
+
+[project.scripts]
+emkay-home = "emkay_home.__main__:run"
+
+[tool.setuptools]
+packages = ["emkay_home"]
+
+[tool.setuptools.dynamic]
+version = { attr = "emkay_home.__version__" }
+
+[tool.setuptools.package-data]
+emkay_home = ["web/*", "profile/*"]

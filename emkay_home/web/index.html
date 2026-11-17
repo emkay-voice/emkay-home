@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#05070a">
+<title>Emkay Home</title>
+<link rel="icon" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<script type="module" src="/static/home.js"></script>
+</head>
+<body>
+<main>
+  <header>
+    <img src="/static/icon.svg" alt="">
+    <h1>EMKAY<small>HOME</small></h1>
+  </header>
+
+  <!-- first start -->
+  <form id="setup" class="card hidden">
+    <p class="lead" data-t="setup.lead"></p>
+    <label for="setup-lang" data-t="setup.lang"></label>
+    <select id="setup-lang" name="lang"></select>
+    <label for="setup-pw" data-t="setup.password"></label>
+    <input id="setup-pw" name="password" type="password" minlength="6" required autocomplete="new-password">
+    <p class="error hidden" id="setup-error"></p>
+    <button type="submit" data-t="setup.start"></button>
+  </form>
+
+  <!-- log in -->
+  <form id="login" class="card hidden">
+    <p class="lead" data-t="login.lead"></p>
+    <label for="login-pw" data-t="login.password"></label>
+    <input id="login-pw" name="password" type="password" required autocomplete="current-password">
+    <p class="error hidden" id="login-error" data-t="login.wrong"></p>
+    <button type="submit" data-t="login.go"></button>
+  </form>
+
+  <div id="house" class="hidden">
+    <!-- add an Emkay -->
+    <section class="card">
+      <h2 data-t="add.title"></h2>
+      <form id="add">
+        <p class="lead" data-t="add.lead"></p>
+        <label for="add-name" data-t="add.name"></label>
+        <input id="add-name" name="name" maxlength="40" data-t-placeholder="add.placeholder" autocomplete="off">
+        <button type="submit" data-t="add.show"></button>
+      </form>
+      <div id="qr" class="qr hidden">
+        <div id="qr-code"></div>
+        <p id="qr-count" class="count"></p>
+        <p id="qr-done" class="ok big hidden"></p>
+        <div class="row">
+          <button id="qr-again" class="ghost hidden" data-t="add.again"></button>
+          <button id="qr-close" class="ghost" data-t="add.done"></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- the paired Emkays -->
+    <section class="card">
+      <h2 data-t="list.title"></h2>
+      <p id="empty" class="note hidden" data-t="list.empty"></p>
+      <ul id="emkays" class="emkays"></ul>
+    </section>
+
+    <!-- language -->
+    <section class="card">
+      <h2 data-t="lang.title"></h2>
+      <p class="note" data-t="lang.lead"></p>
+      <select id="lang"></select>
+      <p id="lang-saved" class="ok note hidden" data-t="lang.saved"></p>
+    </section>
+
+    <!-- certificate -->
+    <section class="card">
+      <h2 data-t="ca.title"></h2>
+      <p class="note" data-t="ca.lead"></p>
+      <p class="fp" id="ca-fp"></p>
+      <a class="button ghost" href="/ca.crt" download="emkay-home.crt" data-t="ca.download"></a>
+    </section>
+
+    <div class="row"><button id="logout" class="ghost" data-t="logout"></button></div>
+  </div>
+
+  <footer data-t="footer"></footer>
+</main>
+</body>
+</html>

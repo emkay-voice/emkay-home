@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#05070a">
+<title>Emkay Home</title>
+<link rel="icon" href="/static/icon.svg">
+<link rel="stylesheet" href="/static/style.css">
+<script type="module" src="/static/welcome.js"></script>
+</head>
+<body>
+<main>
+  <header>
+    <img src="/static/icon.svg" alt="">
+    <h1>EMKAY<small>HOME</small></h1>
+  </header>
+
+  <section class="card">
+    <h2 data-t="welcome.title"></h2>
+    <p id="checking" class="lead" data-t="welcome.checking"></p>
+
+    <div id="trusted" class="hidden">
+      <p class="ok" data-t="welcome.trusted"></p>
+      <button id="continue" data-t="welcome.continue"></button>
+    </div>
+
+    <div id="need" class="hidden">
+      <p class="lead" data-t="welcome.need"></p>
+      <p id="no-ca" class="error hidden" data-t="welcome.no_ca"></p>
+      <div id="ca">
+        <a class="button" href="/ca.crt" download="emkay-home.crt" data-t="welcome.download"></a>
+        <p class="note"><span data-t="welcome.fp"></span><br><span id="fp" class="fp"></span></p>
+      </div>
+      <h2 data-t="welcome.how"></h2>
+      <div id="guides"></div>
+      <button id="retry" class="ghost" data-t="welcome.retry"></button>
+    </div>
+  </section>
+
+  <footer data-t="footer"></footer>
+</main>
+</body>
+</html>
