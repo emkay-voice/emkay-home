@@ -44,6 +44,9 @@ jobs:
         run: |
           export NODE_EXTRA_CA_CERTS="$(python3 -c "import json;print(json.load(open('pairing.json'))['ca'])")"
           node tools/ask.mjs pairing.json "what time is it" 120
+          # once more, warm: how long a turn takes the house
+          node tools/ask.mjs pairing.json "what time is it" 60 | tee ask-warm.txt
+          echo "**The house answers** (warm): $(grep -o 'answered in [0-9.]* s' ask-warm.txt)" >> "$GITHUB_STEP_SUMMARY"
 
       # The house in Danish, as a person sets it up: the language on the page –
       # emkay_home then has ovos_core restarted (emkay_home_restarter) to load
@@ -82,7 +85,9 @@ jobs:
       # the house page, then the house says something and hears it back.
       # Whisper tiny, to keep the download small.
       - name: Speech in the house
-        run: python3 tools/speak.py "$(hostname -I | awk '{print $1}')" pairing.json --model tiny
+        run: |
+          python3 tools/speak.py "$(hostname -I | awk '{print $1}')" pairing.json --model tiny | tee speech.json
+          python3 -c "import json;d=json.load(open('speech.json'));print(f\"**Speech in the house** (Whisper {d['model']}, {d['hardware']['cores']} cores): says in {d['tts_seconds']} s, hears in {d['stt_seconds']} s – heard “{d['heard']}”\")" >> "$GITHUB_STEP_SUMMARY"
 
       - if: always()
         name: What the house did
