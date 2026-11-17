@@ -72,7 +72,7 @@ jobs:
       matrix:
         include:
           - image: emkay-home
-            file: ${{ matrix.file }}
+            file: image/Dockerfile
           - image: emkay-home-panel
             file: panel/Dockerfile
     steps:

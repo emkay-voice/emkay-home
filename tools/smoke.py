@@ -16,6 +16,7 @@ import json
 import ssl
 import sys
 import tempfile
+import time
 import urllib.parse
 import urllib.request
 
@@ -114,9 +115,21 @@ def main():
             assert "next=panel" in e.headers.get("Location", ""), e.headers.get("Location")
 
         step("control panel: signed in, it opens")
-        with web.open(panel_base + "/api/status", timeout=30) as r:
-            assert r.status == 200, r.status
-            json.loads(r.read())
+        # the panel may still be starting (Caddy answers 502 until it is up)
+        for _ in range(60):
+            try:
+                with web.open(panel_base + "/api/status", timeout=30) as r:
+                    assert r.status == 200, r.status
+                    json.loads(r.read())
+                break
+            except urllib.error.HTTPError as e:
+                if e.code != 502:
+                    raise
+                time.sleep(2)
+        else:
+            raise AssertionError("the control panel never came up")
+        with web.open(panel_base + "/", timeout=30) as r:
+            assert b'id="emkay-theme"' in r.read(), "the panel is not in Emkay's colours"
 
     print(json.dumps({"link": link, "ca": f.name, "client_id": me[-1]["id"]}))
 

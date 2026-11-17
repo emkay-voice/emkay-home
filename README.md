@@ -132,7 +132,8 @@ Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
 
 ### The control panel
 
-The OVOS in the house is looked after with OpenVoiceOS' own control panel –
+The OVOS in the house is looked after with OpenVoiceOS' own control panel, in
+Emkay's colours as on the phone ([`panel/emkay_panel.py`](panel/emkay_panel.py)) –
 skills and plugins, settings, logs, the message bus – at
 `https://<house>:8500/` ("Control panel" on the house page). It sits behind
 the house page's sign-in: Caddy asks `emkay_home` first (`forward_auth`), and
