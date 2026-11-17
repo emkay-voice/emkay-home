@@ -42,6 +42,33 @@ jobs:
           export NODE_EXTRA_CA_CERTS="$(python3 -c "import json;print(json.load(open('pairing.json'))['ca'])")"
           node tools/ask.mjs pairing.json "what time is it" 120
 
+      # The house in Danish, as a person sets it up: the language on the page,
+      # then OVOS restarted to load its skills in that language.
+      - name: The house in Danish
+        run: |
+          DC="sudo docker compose --project-directory /opt/emkay-home/compose"
+          python3 - <<'EOF'
+          import json, ssl, urllib.request, http.cookiejar, subprocess
+          ip = subprocess.check_output("hostname -I", shell=True, text=True).split()[0]
+          ca = json.load(open("pairing.json"))["ca"]
+          o = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ssl.create_default_context(cafile=ca)),
+                                          urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+          def api(p, b):
+              r = urllib.request.Request(f"https://{ip}{p}", data=json.dumps(b).encode(), headers={"Content-Type": "application/json"})
+              return json.loads(o.open(r).read())
+          api("/api/login", {"password": "emkay-smoke"}); print(api("/api/lang", {"lang": "da-dk"}))
+          EOF
+          sudo docker exec ovos_core cat /home/ovos/.config/mycroft/mycroft.conf | head -5
+          $DC restart ovos_core
+          sleep 20
+          for i in $(seq 1 60); do
+            state="$($DC ps --format '{{.Health}}' ovos_core)"; echo "$(date +%T) $state"
+            [ "$state" = healthy ] && break; sleep 10
+          done
+          python3 tools/smoke.py "$(hostname -I | awk '{print $1}')" > pairing-da.json
+          export NODE_EXTRA_CA_CERTS="$(python3 -c "import json;print(json.load(open('pairing-da.json'))['ca'])")"
+          node tools/ask.mjs pairing-da.json "hvad er klokken" 120
+
       - if: always()
         name: What the house did
         run: |
