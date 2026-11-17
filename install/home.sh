@@ -468,8 +468,13 @@ pt-br|un_kept|Os dados ficam guardados – uma nova instalação os recupera.
 # The installer's language: --lang, then $LANG/$LC_ALL ("da_DK.UTF-8" → da).
 # pt-br falls back to pt, then English; every other language to English.
 pick_lang() {
-  local l="${UI_LANG:-${LC_ALL:-${LANG:-en}}}"
-  l="$(printf '%s' "$l" | tr 'A-Z_' 'a-z-' | cut -d. -f1)"
+  # the first of these that names a language (not "C" or "POSIX", which
+  # containers and minimal systems often set)
+  local l="" v
+  for v in "$UI_LANG" "${LANGUAGE%%:*}" "$LC_ALL" "$LC_MESSAGES" "$LANG"; do
+    case "$v" in ""|C|C.*|POSIX) ;; *) l="$v"; break ;; esac
+  done
+  l="$(printf '%s' "${l:-en}" | tr 'A-Z_' 'a-z-' | cut -d. -f1)"
   case "$l" in
     pt-br*) echo pt-br ;;
     da*|de*|es*|ca*|gl*|eu*|fr*|it*|nl*|pt*) echo "${l%%-*}" ;;
@@ -643,6 +648,17 @@ install_docker() {
   else $SUDO service docker start; fi
 }
 
+# A freshly started Docker takes a moment before it answers (OpenRC returns
+# before the daemon is up) – wait for it, up to a minute.
+wait_docker() {
+  local i
+  for i in $(seq 1 30); do
+    $SUDO docker info > /dev/null 2>&1 && return 0
+    sleep 2
+  done
+  return 1
+}
+
 if command -v docker >/dev/null 2>&1 && $SUDO docker compose version >/dev/null 2>&1; then
   ok "$(say docker_ok)"
 else
@@ -651,6 +667,7 @@ else
   [ $rc -eq 3 ] && die "$(say docker_unknown "$OS_NAME")" nolog
   [ $rc -ne 0 ] && die "$(say docker_install)"
 fi
+wait_docker >> "$LOG" 2>&1
 
 # Can Docker start a container here? (In an LXC container without "nesting"
 # it can't.) Caddy is needed anyway, so this costs nothing extra.

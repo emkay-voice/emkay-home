@@ -94,10 +94,11 @@ jobs:
 
       - name: Boot it
         run: |
-          # its own network (its Docker makes its own docker0), with the
-          # house's two ports published on the runner
-          docker run -d --name machine --privileged --cgroupns=host -p 80:80 -p 443:443 \
-            -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v /var/lib/docker -v /lib/modules:/lib/modules:ro \
+          # its own network (its Docker makes its own docker0); the runner
+          # reaches it at its address on the runner's docker0
+          docker run -d --name machine --privileged --cgroupns=host \
+            -v /sys/fs/cgroup:/sys/fs/cgroup:rw -v /lib/modules:/lib/modules:ro \
+            -v /var/lib/docker -v /var/lib/containerd \
             --tmpfs /run --tmpfs /tmp -e container=docker machine
           sleep 8
           docker exec machine sh -c 'cat /etc/os-release | head -3'
@@ -107,8 +108,10 @@ jobs:
           docker exec -e LANG=da_DK.UTF-8 machine bash -c \
             "curl -fsSL https://raw.githubusercontent.com/emkay-voice/emkay-home/${{ github.event.pull_request.head.sha || github.sha }}/install/home.sh | bash -s -- --ref ${{ github.event.pull_request.head.sha || github.sha }}"
 
+      # by the machine's own address, as a phone on the LAN would (through a
+      # published port the house would see another address than was asked for)
       - name: Walk through the house
-        run: python3 tools/smoke.py "$(hostname -I | awk '{print $1}')"
+        run: python3 tools/smoke.py "$(docker inspect -f '{{.NetworkSettings.IPAddress}}' machine)"
 
       - if: failure()
         name: What happened
