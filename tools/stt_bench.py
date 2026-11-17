@@ -41,10 +41,17 @@ FLEURS = "https://huggingface.co/datasets/google/fleurs/resolve/main/data/da_dk/
 FLEURS_CLIPS = 40
 
 
+#: Whisper writes numbers and "kl." the way a newspaper does; what was said
+#: is the same.
+SAME = {"0": "nul", "1": "en", "2": "to", "3": "tre", "4": "fire", "5": "fem", "6": "seks",
+        "7": "syv", "8": "otte", "9": "ni", "10": "ti", "11": "elleve", "12": "tolv",
+        "kl": "klokken", "et": "en", "imorgen": "i morgen"}
+
+
 def norm(s):
     s = s.lower().replace("-", " ")
     s = re.sub(r"[^\w\sæøå]", " ", s)
-    return " ".join(s.split())
+    return " ".join(SAME.get(w, w) for w in s.split())
 
 
 def wer(ref, hyp):
@@ -164,8 +171,21 @@ def run(model, clipdir):
     }, ensure_ascii=False))
 
 
+def rescore(r):
+    """The word error rate again from what was heard (so a better norm()
+    applies to results already made)."""
+    for name, st in r["sets"].items():
+        e = n = 0
+        for c in r["clips"]:
+            if c["set"] == name:
+                ce, cn = wer(c["text"], c["heard"])
+                e += ce; n += cn
+        st["wer"] = round(100 * e / max(n, 1), 1)
+    return r
+
+
 def report(files):
-    rows = [json.loads(Path(f).read_text()) for f in files if Path(f).stat().st_size]
+    rows = [rescore(json.loads(Path(f).read_text())) for f in files if Path(f).stat().st_size]
     sets = sorted({s for r in rows for s in r["sets"]})
     head = "| model | peak RAM | load | " + " | ".join(f"{s}: WER · s/clip" for s in sets) + " |"
     lines = [head, "|" + "---|" * (3 + len(sets))]
