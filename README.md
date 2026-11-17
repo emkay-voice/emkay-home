@@ -4,10 +4,11 @@
 [Emkay](https://emkay.ai) are satellites of. As easy as Emkay itself: open
 the page, tap here and there, and you're up.
 
-> **Status: first version, early alpha.** Docker compose with OVOS,
-> hivemind-core and the house page; "Add an Emkay" with a QR code; the
-> house's own certificate. The install script, the Home Assistant add-on and
-> Emkay served from the house come next (see [Roadmap](#roadmap)).
+> **Status: early alpha.** Docker compose with OVOS, hivemind-core and the
+> house page; "Add an Emkay" with a QR code; the house's own certificate;
+> Emkay itself served from the house; in all of Emkay's languages. The
+> install script and the Home Assistant add-on come next (see
+> [Roadmap](#roadmap)).
 > Background and decisions: [emkay-voice/emkay#33](https://github.com/emkay-voice/emkay/issues/33).
 
 ## What it is
@@ -62,7 +63,7 @@ phone / tablet with Emkay                       the house (docker compose, host 
 |---|---|---|
 | `ovos_messagebus`, `ovos_core` | [ovos-docker](https://github.com/OpenVoiceOS/ovos-docker)'s own (`smartgic/ovos-*:alpha`) | stock OpenVoiceOS, as ovos-docker's "server" compose runs it – no microphone or speaker in the house; the Emkays are the ears and the voice |
 | `emkay_home` | this repo ([`image/`](image/Dockerfile)) | **hivemind-core**, pinned to versions that start, and **the house page** ([`emkay_home/`](emkay_home)) |
-| `caddy` | `caddy:2` | one https address for everything, with the house's own certificate ([`caddy/Caddyfile`](caddy/Caddyfile)) |
+| `caddy` | `caddy:2` | one https address for everything, with the house's own certificate ([`caddy/Caddyfile`](caddy/Caddyfile)): the house page at `/`, hivemind-core at `/hivemind`, Emkay at `/emkay/` |
 
 Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
 
@@ -91,9 +92,34 @@ Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
    If not, it offers the certificate and a short guide for the phone's system;
    if so, it goes straight on to `https://<house>/pair#t=<code>`.
 4. That page trades the code (once) for a new hivemind-core client of its
-   own and opens Emkay with the pairing link `#hivemind=<base64 JSON>` –
-   host, port 443, path `/hivemind`, key, password, language. Emkay saves it
-   and is a satellite of the house from then on.
+   own and opens Emkay – from the house, `https://<house>/emkay/` – with the
+   pairing link `#hivemind=<base64 JSON>`: host, port 443, path `/hivemind`,
+   key, password, language. Emkay saves it and is a satellite of the house
+   from then on.
+
+### Emkay, served from the house
+
+The phones load Emkay itself from the house too, not from the internet
+([emkay#30](https://github.com/emkay-voice/emkay/issues/30)). Emkay is a
+static site, and every deploy of app.emkay.ai is also published as one
+download (the release [`site`](https://github.com/emkay-voice/emkay/releases/tag/site)).
+`emkay_home` fetches it on the first start and then once a day when there is
+a newer build (checked against its sha256, switched in one step), and Caddy
+serves it at `/emkay/`. The house page shows which build it serves, with
+"Look for a newer one". Until it has been fetched, a paired phone opens
+app.emkay.ai, which talks to the house the same way. `EMKAY_URL` in `.env`
+can point the phones at another Emkay instead.
+
+### Languages
+
+Emkay Home speaks Emkay's languages – English, Danish, German, Spanish,
+Catalan, Galician, Basque, French, Italian, Dutch and Portuguese (Portugal
+and Brazil) – with Emkay's words for things, so the house page and the phones
+read alike. The texts are in [`emkay_home/locale/`](emkay_home/locale), one
+`.dialog` file per text like an OVOS skill (and like Emkay), so OVOS'
+translation tooling can read them. The page follows the house's language,
+else the browser's. Only English and Danish were written by someone who
+speaks them; the others need a native speaker's look.
 
 ## Certificates
 
@@ -112,24 +138,21 @@ service, and the house doesn't need the internet for its certificate.
 
 ## Roadmap
 
-- **Emkay served from the house** ([emkay#30](https://github.com/emkay-voice/emkay/issues/30)) –
-  needs Emkay's site as a release download; until then a paired phone opens
-  app.emkay.ai, which talks to the house directly.
 - **Install script** for a Pi or an old PC, and a **Home Assistant add-on**
   (next to [haos-ovos-addons](https://github.com/andlo/haos-ovos-addons)).
 - **Hardware presets** ("private" / "fast", GPU detection), so nobody picks
   STT/TTS plugins by hand.
-- Screenshots in the certificate guide; all of Emkay's languages (today
-  English and Danish).
+- Screenshots in the certificate guide; native speakers' look at the texts.
 
 ## Development
 
 ```sh
 python -m venv .venv && .venv/bin/pip install -r image/requirements.txt -e .
-EMKAY_HOME_DATA=/tmp/eh/data EMKAY_HOME_OVOS_CONFIG=/tmp/eh/ovos HTTP_PORT=8080 HTTPS_PORT=8443 .venv/bin/emkay-home
+EMKAY_HOME_DATA=/tmp/eh/data EMKAY_HOME_OVOS_CONFIG=/tmp/eh/ovos EMKAY_HOME_SITE=/tmp/eh/site \
+  HTTP_PORT=8080 HTTPS_PORT=8443 .venv/bin/emkay-home
 # Caddy in front of it:
 podman run --rm --network host -e HTTP_PORT=8080 -e HTTPS_PORT=8443 \
-  -v ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro,Z docker.io/library/caddy:2
+  -v ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro,Z -v /tmp/eh/site:/emkay-site:ro,z docker.io/library/caddy:2
 # and an ovos-messagebus for hivemind-core to talk to
 ```
 

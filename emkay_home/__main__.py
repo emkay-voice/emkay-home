@@ -7,7 +7,7 @@ import argparse
 import asyncio
 import logging
 
-from . import app, hive, house, settings
+from . import app, hive, house, settings, site
 
 
 async def main(run_hivemind=True):
@@ -16,8 +16,9 @@ async def main(run_hivemind=True):
     hive.write_server_config()
     app.make_app().listen(settings.LISTEN_PORT, settings.LISTEN_HOST)
     logging.getLogger("emkay-home").info("the page is on %s:%s", settings.LISTEN_HOST, settings.LISTEN_PORT)
+    tasks = [asyncio.create_task(site.keep_updated())]
     if run_hivemind:
-        await hive.keep_running()
+        tasks.append(asyncio.create_task(hive.keep_running()))
     await asyncio.Event().wait()
 
 

@@ -1,7 +1,7 @@
 // Pairing, over https: trade the one-time code for this Emkay's own
 // connection to the house, and open Emkay with it (#hivemind=…). The code
 // and the link only ever live in fragments, which browsers don't send.
-import { setLang, t, translate } from "./i18n.js";
+import { apply, setLang, t } from "./i18n.js";
 
 const msg = document.getElementById("msg");
 const code = (location.hash.match(/[#&]t=([\w-]+)/) || [])[1];
@@ -11,7 +11,7 @@ try {
   const info = await (await fetch("/api/info", { cache: "no-store" })).json();
   setLang(info.lang);
 } catch {}
-translate();
+apply();
 
 if (!code) {
   msg.textContent = t("pair.no_code");
