@@ -19,6 +19,9 @@
 #   --lang LANG        the installer's language        [EMKAY_HOME_LANG, else $LANG]
 #   --uninstall        stop and remove Emkay Home (asks before deleting data)
 #
+# EMKAY_HOME_BUILD=1 builds Emkay Home's image here instead of pulling it
+# (it is built here anyway when it can't be pulled).
+#
 # How it is built, for whoever extends it:
 #   * Everything the user reads goes through `say KEY` – the texts are in the
 #     TEXTS table below, in Emkay's twelve languages. A new text: add a line
@@ -94,6 +97,7 @@ en|ports|The house: ports %s and %s
 en|ports_moved|Port 80 or 443 is taken – the house uses %s and %s
 en|files|Fetching Emkay Home’s setup
 en|pull|Fetching OpenVoiceOS and Emkay Home – the first time takes a few minutes
+en|build|Building Emkay Home on this machine – a minute or two
 en|start|Starting the house
 en|wait|Waiting for the house to wake up
 en|wait_fail|The house didn’t answer in time.
@@ -126,6 +130,7 @@ da|ports|Huset: port %s og %s
 da|ports_moved|Port 80 eller 443 er optaget – huset bruger %s og %s
 da|files|Henter Emkay Homes opsætning
 da|pull|Henter OpenVoiceOS og Emkay Home – første gang tager det et par minutter
+da|build|Bygger Emkay Home på denne maskine – et minut eller to
 da|start|Starter huset
 da|wait|Venter på, at huset vågner
 da|wait_fail|Huset svarede ikke i tide.
@@ -158,6 +163,7 @@ de|ports|Das Haus: Ports %s und %s
 de|ports_moved|Port 80 oder 443 ist belegt – das Haus nutzt %s und %s
 de|files|Hole die Einrichtung von Emkay Home
 de|pull|Hole OpenVoiceOS und Emkay Home – beim ersten Mal dauert das ein paar Minuten
+de|build|Baue Emkay Home auf diesem Rechner – ein, zwei Minuten
 de|start|Starte das Haus
 de|wait|Warte, bis das Haus wach ist
 de|wait_fail|Das Haus hat nicht rechtzeitig geantwortet.
@@ -190,6 +196,7 @@ es|ports|La casa: puertos %s y %s
 es|ports_moved|El puerto 80 o 443 está ocupado – la casa usa %s y %s
 es|files|Descargando la configuración de Emkay Home
 es|pull|Descargando OpenVoiceOS y Emkay Home – la primera vez tarda unos minutos
+es|build|Construyendo Emkay Home en esta máquina – un minuto o dos
 es|start|Arrancando la casa
 es|wait|Esperando a que la casa despierte
 es|wait_fail|La casa no respondió a tiempo.
@@ -222,6 +229,7 @@ ca|ports|La casa: ports %s i %s
 ca|ports_moved|El port 80 o 443 està ocupat – la casa fa servir %s i %s
 ca|files|Baixant la configuració d’Emkay Home
 ca|pull|Baixant OpenVoiceOS i Emkay Home – la primera vegada triga uns minuts
+ca|build|Construint Emkay Home en aquesta màquina – un minut o dos
 ca|start|Engegant la casa
 ca|wait|Esperant que la casa es desperti
 ca|wait_fail|La casa no ha respost a temps.
@@ -254,6 +262,7 @@ gl|ports|A casa: portos %s e %s
 gl|ports_moved|O porto 80 ou 443 está ocupado – a casa usa %s e %s
 gl|files|Descargando a configuración de Emkay Home
 gl|pull|Descargando OpenVoiceOS e Emkay Home – a primeira vez tarda uns minutos
+gl|build|Construíndo Emkay Home nesta máquina – un minuto ou dous
 gl|start|Iniciando a casa
 gl|wait|Agardando a que a casa esperte
 gl|wait_fail|A casa non respondeu a tempo.
@@ -286,6 +295,7 @@ eu|ports|Etxea: %s eta %s atakak
 eu|ports_moved|80 edo 443 ataka hartuta dago – etxeak %s eta %s erabiltzen ditu
 eu|files|Emkay Home-ren konfigurazioa deskargatzen
 eu|pull|OpenVoiceOS eta Emkay Home deskargatzen – lehen aldian minutu batzuk behar dira
+eu|build|Emkay Home makina honetan eraikitzen – minutu bat edo bi
 eu|start|Etxea abiarazten
 eu|wait|Etxea esnatu arte itxaroten
 eu|wait_fail|Etxeak ez du garaiz erantzun.
@@ -318,6 +328,7 @@ fr|ports|La maison : ports %s et %s
 fr|ports_moved|Le port 80 ou 443 est pris – la maison utilise %s et %s
 fr|files|Récupération de la configuration d’Emkay Home
 fr|pull|Récupération d’OpenVoiceOS et d’Emkay Home – la première fois prend quelques minutes
+fr|build|Construction d’Emkay Home sur cette machine – une minute ou deux
 fr|start|Démarrage de la maison
 fr|wait|J’attends que la maison se réveille
 fr|wait_fail|La maison n’a pas répondu à temps.
@@ -350,6 +361,7 @@ it|ports|La casa: porte %s e %s
 it|ports_moved|La porta 80 o 443 è occupata – la casa usa %s e %s
 it|files|Scarico la configurazione di Emkay Home
 it|pull|Scarico OpenVoiceOS ed Emkay Home – la prima volta ci vuole qualche minuto
+it|build|Costruisco Emkay Home su questa macchina – un minuto o due
 it|start|Avvio la casa
 it|wait|Aspetto che la casa si svegli
 it|wait_fail|La casa non ha risposto in tempo.
@@ -382,6 +394,7 @@ nl|ports|Het huis: poorten %s en %s
 nl|ports_moved|Poort 80 of 443 is bezet – het huis gebruikt %s en %s
 nl|files|Instellingen van Emkay Home ophalen
 nl|pull|OpenVoiceOS en Emkay Home ophalen – de eerste keer duurt dat een paar minuten
+nl|build|Emkay Home bouwen op deze machine – een minuut of twee
 nl|start|Het huis starten
 nl|wait|Wachten tot het huis wakker is
 nl|wait_fail|Het huis antwoordde niet op tijd.
@@ -414,6 +427,7 @@ pt|ports|A casa: portas %s e %s
 pt|ports_moved|A porta 80 ou 443 está ocupada – a casa usa %s e %s
 pt|files|A transferir a configuração do Emkay Home
 pt|pull|A transferir o OpenVoiceOS e o Emkay Home – da primeira vez demora alguns minutos
+pt|build|A construir o Emkay Home nesta máquina – um minuto ou dois
 pt|start|A iniciar a casa
 pt|wait|À espera que a casa acorde
 pt|wait_fail|A casa não respondeu a tempo.
@@ -438,6 +452,7 @@ pt-br|lxc_hint|No Proxmox: o contêiner → Options → Features → ative “ne
 pt-br|again|Já instalado em %s – atualizando.
 pt-br|files|Baixando a configuração do Emkay Home
 pt-br|pull|Baixando o OpenVoiceOS e o Emkay Home – da primeira vez leva alguns minutos
+pt-br|build|Construindo o Emkay Home nesta máquina – um minuto ou dois
 pt-br|start|Iniciando a casa
 pt-br|wait|Esperando a casa acordar
 pt-br|ready|O Emkay Home está funcionando!
@@ -665,7 +680,24 @@ fetch_setup() {
 }
 
 step files fetch_setup || die "$(say files)"
-step pull $DC pull || die "$(say pull)"
+# Emkay Home's own image comes from ghcr.io; when it can't be pulled (not
+# published for this architecture, not public, no access to ghcr.io), the
+# installer builds it here from the same source – so the one line works
+# whatever happens to the image. EMKAY_HOME_BUILD=1 always builds.
+EH_IMAGE="ghcr.io/emkay-voice/emkay-home:$(sed -n 's/^EMKAY_HOME_VERSION=//p' "$DIR/compose/.env" 2>/dev/null)"
+[ "$EH_IMAGE" = "ghcr.io/emkay-voice/emkay-home:" ] && EH_IMAGE="ghcr.io/emkay-voice/emkay-home:latest"
+
+build_emkay_home() {
+  $SUDO rm -rf "$DIR/src" && $SUDO mkdir -p "$DIR/src" || return 1
+  curl -fsSL "https://codeload.github.com/emkay-voice/emkay-home/tar.gz/$REF" \
+    | $SUDO tar -xz -C "$DIR/src" --strip-components=1 || return 1
+  $SUDO docker build -f "$DIR/src/image/Dockerfile" -t "$EH_IMAGE" "$DIR/src"
+}
+
+step pull $DC pull --ignore-pull-failures || die "$(say pull)"
+if [ "${EMKAY_HOME_BUILD:-0}" = 1 ] || ! $SUDO docker image inspect "$EH_IMAGE" > /dev/null 2>&1; then
+  step build build_emkay_home || die "$(say build)"
+fi
 step start $DC up -d --no-build --remove-orphans || die "$(say start)"
 
 # The house is up when Caddy serves its certificate and the page answers.

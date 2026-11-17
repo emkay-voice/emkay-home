@@ -37,12 +37,22 @@ jobs:
 
   # The installer, the way a person runs it (Docker is already there on the
   # runner), then the same walk-through as above against what it set up.
+  # Twice: once pulling Emkay Home's image (logged in, in case it isn't
+  # public), once without – where the installer must build it itself.
   install:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [pull, build]
     steps:
       - uses: actions/checkout@v4
-      - name: Allow pulling Emkay Home's image (in case it isn't public yet)
+      - name: Allow pulling Emkay Home's image
+        if: matrix.image == 'pull'
         run: echo "${{ secrets.GITHUB_TOKEN }}" | sudo docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Make sure no image can be pulled
+        if: matrix.image == 'build'
+        run: echo "EMKAY_HOME_BUILD=1" >> "$GITHUB_ENV"
       - name: Install
         run: bash install/home.sh --ref "${{ github.event.pull_request.head.sha || github.sha }}"
       - name: Walk through it
