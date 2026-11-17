@@ -13,8 +13,9 @@ each model loads up to a few GB.
     stt_bench.py report FILES…    a Markdown table of the results
 
 MODEL is fw:<name or dir> (faster-whisper, int8 on CPU – what the house's
-ovos-stt-plugin-fasterwhisper runs) or w2v:<huggingface id> (a wav2vec2 CTC
-model, as Røst; transformers on CPU).
+ovos-stt-plugin-fasterwhisper runs), w2v:<huggingface id> (a wav2vec2 CTC
+model, as Røst; transformers on CPU) or w2vlm:<id> (the same with its own
+language model, KenLM).
 """
 import json
 import os
@@ -125,6 +126,21 @@ def load(model):
             with torch.inference_mode():
                 ids = m(**x).logits.argmax(-1)
             return tok.batch_decode(ids)[0].strip()
+        return hear
+    if kind == "w2vlm":
+        # the same, with the model's own language model (CoRal's KenLM) –
+        # what a house can afford and a phone can't
+        import torch
+        from transformers import AutoModelForCTC, AutoProcessor
+        torch.set_num_threads(os.cpu_count() or 4)
+        proc = AutoProcessor.from_pretrained(name)
+        m = AutoModelForCTC.from_pretrained(name, torch_dtype=torch.float32).eval()
+
+        def hear(audio):
+            x = proc(audio, sampling_rate=16000, return_tensors="pt")
+            with torch.inference_mode():
+                logits = m(**x).logits
+            return proc.batch_decode(logits.numpy()).text[0].strip()
         return hear
     raise SystemExit(f"unknown model kind: {model}")
 

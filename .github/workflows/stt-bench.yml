@@ -47,6 +47,7 @@ jobs:
           - fw:large-v3-turbo
           - fw:edda
           - w2v:CoRal-project/roest-v3-wav2vec2-315m
+          - w2vlm:CoRal-project/roest-v3-wav2vec2-315m
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -60,8 +61,11 @@ jobs:
         run: |
           pip install -q faster-whisper soundfile
           case "${{ matrix.model }}" in
-            w2v:*|fw:edda) pip install -q torch --index-url https://download.pytorch.org/whl/cpu
-                           pip install -q transformers ctranslate2 ;;
+            w2v*|fw:edda) pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+                          pip install -q transformers ctranslate2 ;;
+          esac
+          case "${{ matrix.model }}" in
+            w2vlm:*) pip install -q pyctcdecode https://github.com/kpu/kenlm/archive/master.zip ;;
           esac
       # Edda v0.2 (Danish Foundation Models, Apache 2.0): whisper-large-v3-turbo
       # fine-tuned on Danish – converted here to faster-whisper's format, as
