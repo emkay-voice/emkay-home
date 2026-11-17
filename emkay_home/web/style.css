@@ -42,6 +42,11 @@ ul.emkays .seen { color: var(--muted); font-size: 14px; display: block; }
 .qr .count { color: var(--muted); font-size: 14px; }
 .fp { font: 12px/1.5 ui-monospace, monospace; color: var(--muted); word-break: break-all; }
 details { margin: 10px 0; }
+label.choice { display: flex; gap: 12px; align-items: flex-start; cursor: pointer; color: var(--ink);
+               border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 8px 0; }
+label.choice:has(input:checked) { border-color: var(--accent); background: #0f1924; }
+label.choice input { width: auto; margin: 5px 0 0; accent-color: var(--accent); }
+label.choice small { display: block; color: var(--muted); font-size: 14px; }
 summary { cursor: pointer; color: var(--soft); }
 ol { padding-left: 22px; color: var(--soft); }
 ol li { margin: 4px 0; }

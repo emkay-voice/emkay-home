@@ -857,7 +857,7 @@ step files fetch_setup || die "$(say files)"
 EH_TAG="$(sed -n 's/^EMKAY_HOME_VERSION=//p' "$DIR/compose/.env" 2>/dev/null)"
 EH_TAG="${EH_TAG:-latest}"
 # image name → its Dockerfile in the source (add new images of ours here)
-EH_IMAGES="emkay-home:image/Dockerfile emkay-home-panel:panel/Dockerfile"
+EH_IMAGES="emkay-home:image/Dockerfile emkay-home-panel:panel/Dockerfile emkay-home-speech:speech/Dockerfile"
 
 missing_images() {
   local i

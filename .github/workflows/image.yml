@@ -1,5 +1,6 @@
-# Emkay Home's images – emkay-home (the house page and HiveMind) and
-# emkay-home-panel (the OVOS control panel): built and walked through
+# Emkay Home's images – emkay-home (the house page and HiveMind),
+# emkay-home-panel (the OVOS control panel) and emkay-home-speech (Whisper and
+# Piper, for speech in the house; tried out in e2e.yml): built and walked through
 # (tools/smoke.py behind a real Caddy) on every push and pull request;
 # published to ghcr.io/emkay-voice/<image> for amd64 and arm64 (Pi 4/5) from
 # main and from tags (vX.Y.Z).
@@ -75,6 +76,8 @@ jobs:
             file: image/Dockerfile
           - image: emkay-home-panel
             file: panel/Dockerfile
+          - image: emkay-home-speech
+            file: speech/Dockerfile
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3

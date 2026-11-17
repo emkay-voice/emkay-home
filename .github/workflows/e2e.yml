@@ -78,9 +78,15 @@ jobs:
           export NODE_EXTRA_CA_CERTS="$(python3 -c "import json;print(json.load(open('pairing-da.json'))['ca'])")"
           node tools/ask.mjs pairing-da.json "hvad er klokken" 120
 
+      # Speech in the house (emkay-home#13), as an Emkay uses it: turned on on
+      # the house page, then the house says something and hears it back.
+      # Whisper tiny, to keep the download small.
+      - name: Speech in the house
+        run: python3 tools/speak.py "$(hostname -I | awk '{print $1}')" pairing.json --model tiny
+
       - if: always()
         name: What the house did
         run: |
           DC="sudo docker compose --project-directory /opt/emkay-home/compose"
           $DC ps
-          for s in ovos_core ovos_messagebus emkay_home emkay_home_restarter; do echo "=== $s"; $DC logs --no-color --tail 120 $s; done
+          for s in ovos_core ovos_messagebus emkay_home emkay_home_restarter emkay_home_stt emkay_home_tts; do echo "=== $s"; $DC logs --no-color --tail 120 $s; done

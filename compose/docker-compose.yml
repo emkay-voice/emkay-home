@@ -33,6 +33,9 @@ volumes:
   emkay_home_data:  # the house page's password and language
   emkay_site:       # Emkay itself, served from the house at /emkay/
   emkay_home_requests:  # emkay_home's requests to the restarter
+  emkay_home_speech:    # speech in the house: the choice and the plugins' settings (emkay_home writes them)
+  speech_cache:         # the Whisper models (downloaded the first time)
+  speech_share:         # the Piper voices
   caddy_data:       # the house's certificate authority – keep it, or every device must trust a new one
   caddy_config:
 
@@ -92,6 +95,7 @@ services:
     volumes:
       - emkay_home_data:/data
       - emkay_home_requests:/requests
+      - emkay_home_speech:/speech
       - emkay_site:/emkay-site
       - ovos_config:/ovos-config
       # the same OVOS config for hivemind-core: the sessions it makes for the
@@ -100,9 +104,10 @@ services:
       - hivemind_data:/home/emkay/.local/share/hivemind-core
       - hivemind_config:/home/emkay/.config/hivemind-core
 
-  # Restarts ovos_core when emkay_home asks (a new language is loaded only when
-  # OVOS starts). It alone holds the Docker socket – with no network, and able
-  # to do nothing else – so the page that faces the LAN never does.
+  # Restarts a container when emkay_home asks: ovos_core (a new language is
+  # loaded only when OVOS starts) and the speech servers (a new choice). It
+  # alone holds the Docker socket – with no network, and able to restart only
+  # these – so the page that faces the LAN never does.
   emkay_home_restarter:
     container_name: emkay_home_restarter
     image: docker.io/library/docker:cli
@@ -118,11 +123,13 @@ services:
       - |
         echo "waiting for requests"
         while :; do
-          if [ -f /requests/restart-ovos_core ]; then
-            rm -f /requests/restart-ovos_core
-            echo "$(date '+%F %T') restarting ovos_core"
-            docker restart ovos_core
-          fi
+          for c in ovos_core emkay_home_stt emkay_home_tts; do
+            if [ -f "/requests/restart-$$c" ]; then
+              rm -f "/requests/restart-$$c"
+              echo "$$(date '+%F %T') restarting $$c"
+              docker restart "$$c"
+            fi
+          done
           sleep 3
         done
 
@@ -146,6 +153,34 @@ services:
     depends_on:
       emkay_home:
         condition: service_healthy
+
+  # Speech in the house (speech/): Whisper and Piper for the Emkays, when the
+  # house page says "in the house" – until then they wait, doing nothing.
+  emkay_home_stt: &speech
+    <<: *hardened
+    container_name: emkay_home_stt
+    image: ghcr.io/emkay-voice/emkay-home-speech:${EMKAY_HOME_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: speech/Dockerfile
+    command: ["stt"]
+    restart: unless-stopped
+    network_mode: host
+    logging: *logging
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - emkay_home_speech:/home/ovos/.config/mycroft:ro
+      - speech_cache:/home/ovos/.cache
+      - speech_share:/home/ovos/.local/share
+    depends_on:
+      emkay_home:
+        condition: service_healthy
+
+  emkay_home_tts:
+    <<: *speech
+    container_name: emkay_home_tts
+    command: ["tts"]
 
   caddy:
     container_name: emkay_home_caddy

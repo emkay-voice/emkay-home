@@ -64,6 +64,28 @@
       <ul id="emkays" class="emkays"></ul>
     </section>
 
+    <!-- speech: on the phones, or in the house (speech.py) -->
+    <section class="card" id="speech-card">
+      <h2 data-i18n="speech.title"></h2>
+      <p class="note" data-i18n="speech.lead"></p>
+      <form id="speech">
+        <label class="choice"><input type="radio" name="where" value="phones">
+          <span><b data-i18n="speech.phones"></b><small data-i18n="speech.phones_lead"></small></span></label>
+        <label class="choice"><input type="radio" name="where" value="house">
+          <span><b data-i18n="speech.house"></b><small data-i18n="speech.house_lead"></small></span></label>
+        <p class="note" id="speech-machine"></p>
+        <details id="speech-more">
+          <summary data-i18n="speech.model"></summary>
+          <select id="speech-model" name="model"></select>
+        </details>
+        <p class="note" id="speech-state"></p>
+        <div class="row">
+          <button type="submit" data-i18n="speech.save"></button>
+          <span id="speech-saved" class="ok note hidden" data-i18n="speech.saved"></span>
+        </div>
+      </form>
+    </section>
+
     <!-- Emkay, served from the house -->
     <section class="card" id="emkay-card">
       <h2 data-i18n="emkay.title"></h2>

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import tornado.web
 
-from . import hive, house, panel, settings, site
+from . import hive, house, panel, settings, site, speech
 
 LOG = logging.getLogger("emkay-home")
 WEB = Path(__file__).parent / "web"
@@ -184,6 +184,7 @@ class Setup(Base):
         st["lang"] = lang
         house.save_state(st)
         house.set_ovos_lang(lang)
+        speech.lang_changed()
         self.login()
         self.write({"ok": True})
 
@@ -215,7 +216,56 @@ class Lang(Base):
         st["lang"] = lang
         house.save_state(st)
         house.set_ovos_lang(lang)
+        speech.lang_changed()
         self.write({"ok": True})
+
+
+class Speech(Base):
+    """Speech on the phones or in the house (speech.py)."""
+    def get(self):
+        self.need_login()
+        self.write({**speech.current(), **{"status": speech.status()}})
+
+    def post(self):
+        self.need_login()
+        b = self.body()
+        try:
+            speech.choose(b.get("where"), b.get("model") or None)
+        except ValueError:
+            raise tornado.web.HTTPError(400)
+        self.write({"ok": True})
+
+
+def _bearer(handler):
+    h = handler.request.headers.get("Authorization", "")
+    return h[7:].strip() if h.lower().startswith("bearer ") else ""
+
+
+class SpeechAuth(Base):
+    """Caddy's forward_auth for /speech/: a paired Emkay (its HiveMind key as
+    a Bearer token), or someone signed in to the house page."""
+    def get(self):
+        ok = speech.in_house() and (hive.has_key(_bearer(self)) or bool(self.https and self.current_user))
+        self.set_status(200 if ok else 401)
+
+
+class SpeechInfo(Base):
+    """For a paired Emkay (Bearer: its HiveMind key): whether to use the
+    house's speech, and where – asked when it connects, so phones paired
+    before speech moved into the house learn about it too."""
+    def set_default_headers(self):
+        super().set_default_headers()
+        self.set_header("Access-Control-Allow-Origin", "*")
+        self.set_header("Access-Control-Allow-Headers", "Authorization")
+
+    def options(self):
+        self.set_status(204)
+
+    def get(self):
+        self.need_https()
+        if not hive.has_key(_bearer(self)):
+            raise tornado.web.HTTPError(401)
+        self.write({"speech": speech.for_emkay(self.request.host_name), "status": speech.status()["state"]})
 
 
 class Clients(Base):
@@ -275,6 +325,9 @@ class Redeem(Base):
         }
         if st.get("lang"):
             link["lang"] = st["lang"]
+        sp = speech.for_emkay(self.request.host_name)
+        if sp:
+            link["speech"] = sp
         b64 = base64.b64encode(json.dumps(link).encode()).decode()
         self.write({"url": f"{site.emkay_url(self.request.host_name)}#hivemind={tornado.escape.url_escape(b64, plus=False)}",
                     "name": inv["name"]})
@@ -311,6 +364,9 @@ def make_app():
         (r"/api/redeem", Redeem),
         (r"/api/emkay", Emkay),
         (r"/api/panel-auth", PanelAuth),
+        (r"/api/speech", Speech),
+        (r"/api/speech-auth", SpeechAuth),
+        (r"/api/speech-info", SpeechInfo),
         (r"/static/texts\.json", Texts),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": str(WEB)}),
     ], xheaders=False)

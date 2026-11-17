@@ -95,7 +95,8 @@ phone / tablet with Emkay                       the house (docker compose, host 
 | `ovos_messagebus`, `ovos_core` | [ovos-docker](https://github.com/OpenVoiceOS/ovos-docker)'s own (`smartgic/ovos-*:alpha`) | stock OpenVoiceOS, as ovos-docker's "server" compose runs it – no microphone or speaker in the house; the Emkays are the ears and the voice |
 | `emkay_home` | this repo ([`image/`](image/Dockerfile)) | **hivemind-core**, pinned to versions that start, and **the house page** ([`emkay_home/`](emkay_home)) |
 | `emkay_home_panel` | this repo ([`panel/`](panel/Dockerfile)) | the stock [OpenVoiceOS control panel](https://github.com/OpenVoiceOS/ovos-control-panel) for the house's OVOS, on localhost |
-| `emkay_home_restarter` | `docker:cli` | restarts `ovos_core` when the house page asks (a new language); the only thing with the Docker socket, and no network |
+| `emkay_home_stt`, `emkay_home_tts` | this repo ([`speech/`](speech/Dockerfile)) | speech in the house, when chosen: the stock `ovos-stt-server` with Whisper (faster-whisper) and `ovos-tts-server` with Piper. Until then they wait, doing nothing |
+| `emkay_home_restarter` | `docker:cli` | restarts `ovos_core` (a new language) and the speech servers (a new choice) when the house page asks; the only thing with the Docker socket, and no network |
 | `caddy` | `caddy:2` | one https address for everything, with the house's own certificate ([`caddy/Caddyfile`](caddy/Caddyfile)): the house page at `/`, hivemind-core at `/hivemind`, Emkay at `/emkay/`, the control panel on port 8500 |
 
 Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
@@ -142,6 +143,29 @@ password for the whole house and the token is never shown. A browser that
 isn't signed in is sent to the house page and back. The panel edits the same
 `mycroft.conf` as `ovos_core` and asks ovos-core to install skills, so they
 land where they run. `PANEL_PORT` in `.env` moves it.
+
+### Speech: on the phones, or in the house
+
+Every Emkay can hear and speak by itself, in the browser – that works
+everywhere. On a strong machine the house can do it for all of them instead,
+better and faster than a phone: "Speech" on the house page, *on the phones*
+or *in the house*. The house looks at the machine (cores, memory) and
+suggests where speech should be and which Whisper model fits; the model can
+still be changed there. Nobody picks plugins.
+
+In the house, OpenVoiceOS' own servers do the work – `ovos-stt-server` with
+Whisper (faster-whisper) and `ovos-tts-server` with Piper, in Emkay's
+languages – with their own config, so the house's OVOS is left alone. Caddy
+serves them at `/speech/stt/` and `/speech/tts/`, only for a paired Emkay
+(its HiveMind key as a Bearer token). The pairing link tells a new Emkay
+about it; one paired earlier asks `/api/speech-info`. The first start
+downloads the model, a few minutes. Using it from Emkay is
+[emkay#39](https://github.com/emkay-voice/emkay/issues/39); a GPU is the
+next step of [#13](https://github.com/emkay-voice/emkay-home/issues/13).
+
+`python tools/speak.py <house> pairing.json` tries it out the way an Emkay
+would (the e2e workflow does): the house says something and hears it back,
+with how long each took.
 
 ### Emkay, served from the house
 

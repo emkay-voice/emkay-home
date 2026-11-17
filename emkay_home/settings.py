@@ -18,6 +18,13 @@ OVOS_CONFIG = Path(os.environ.get("EMKAY_HOME_OVOS_CONFIG", "/ovos-config"))
 #: e.g. "restart-ovos_core" after the language changed.
 REQUESTS = Path(os.environ.get("EMKAY_HOME_REQUESTS", "/requests"))
 
+#: The speech containers' own config (emkay_home_speech volume): speech.py
+#: writes it, emkay_home_stt / emkay_home_tts read it.
+SPEECH_CONFIG = Path(os.environ.get("EMKAY_HOME_SPEECH", "/speech"))
+#: Where they listen (localhost; Caddy serves them at /speech/stt/, /speech/tts/).
+STT_PORT = _int("STT_PORT", 8590)
+TTS_PORT = _int("TTS_PORT", 8591)
+
 #: Where the page listens; only Caddy talks to it.
 LISTEN_HOST = os.environ.get("EMKAY_HOME_LISTEN", "127.0.0.1")
 LISTEN_PORT = _int("EMKAY_HOME_PORT", 8099)
