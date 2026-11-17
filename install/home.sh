@@ -38,6 +38,10 @@
 #   * The compose files come from GitHub (raw) at $REF, so the installer and
 #     the repo never drift apart; the installer itself holds no copy of them.
 set -o pipefail
+# Work from / : the shell may stand in a folder that is gone (in
+# /opt/emkay-home/compose when it was removed, say), and docker compose
+# refuses to run from a folder that doesn't exist. Every path here is absolute.
+cd / 2>/dev/null || true
 
 # --- settings -----------------------------------------------------------------
 

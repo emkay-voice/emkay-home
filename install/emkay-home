@@ -12,6 +12,7 @@
 # fills in DIR below. The texts and the look are the installer's own: this
 # command runs the copy of it kept in $DIR/bin.
 set -o pipefail
+cd / 2>/dev/null || true   # as the installer: never depend on where the shell stands
 DIR="${EMKAY_HOME_DIR:-@DIR@}"
 [ "$DIR" = "@DIR@" ] && DIR=/opt/emkay-home
 
