@@ -158,7 +158,7 @@ Whisper (faster-whisper) and `ovos-tts-server` with Piper, in Emkay's
 languages – with their own config, so the house's OVOS is left alone. Caddy
 serves them at `/speech/stt/` and `/speech/tts/`, only for a paired Emkay
 (its HiveMind key as a Bearer token). The pairing link tells a new Emkay
-about it; one paired earlier asks `/api/speech-info`. The first start
+about it; one paired earlier asks `/api/house-info`. The first start
 downloads the model, a few minutes. Using it from Emkay is
 [emkay#39](https://github.com/emkay-voice/emkay/issues/39); a GPU is the
 next step of [#13](https://github.com/emkay-voice/emkay-home/issues/13).
