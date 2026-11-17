@@ -29,6 +29,8 @@ def main():
     p.add_argument("--model", default="tiny")
     p.add_argument("--lang", default="en-us")
     p.add_argument("--say", default="what time is it")
+    p.add_argument("--voice", default="en_US-lessac-medium",
+                   help="the Piper voice, as Emkay asks for it (its voiceFor)")
     p.add_argument("--expect", default="time", help="a word the house must hear back")
     p.add_argument("--timeout", type=int, default=900, help="seconds to wait for the models")
     a = p.parse_args()
@@ -75,7 +77,7 @@ def main():
     assert info and info["stt"] and info["tts"], info
 
     step("a stranger is turned away")
-    tts_url = info["tts"] + "/v2/synthesize?" + urllib.parse.urlencode({"utterance": a.say, "lang": a.lang})
+    tts_url = info["tts"] + "/v2/synthesize?" + urllib.parse.urlencode({"utterance": a.say, "lang": a.lang, "voice": a.voice})
     try:
         phone.open(tts_url, timeout=15)
         raise AssertionError("speech answered without a key")
