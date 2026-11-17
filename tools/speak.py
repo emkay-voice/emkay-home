@@ -68,8 +68,10 @@ def main():
     step(f"  ready after {time.time() - t0:.0f} s – {s['hardware']}")
 
     step("the Emkay asks the house where speech is")
-    with phone.open(urllib.request.Request(base + "/api/speech-info", headers=key), timeout=15) as r:
-        info = json.loads(r.read())["speech"]
+    with phone.open(urllib.request.Request(base + "/api/house-info", headers=key), timeout=15) as r:
+        house = json.loads(r.read())
+    info = house["speech"]
+    assert house["panel"].startswith("https://"), house
     assert info and info["stt"] and info["tts"], info
 
     step("a stranger is turned away")

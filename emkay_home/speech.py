@@ -156,7 +156,7 @@ def status():
 
 def for_emkay(host):
     """What a paired Emkay needs to use the house's speech (the pairing link
-    carries it, and /api/speech-info answers it later), or None."""
+    carries it, and /api/house-info answers it later), or None."""
     if not in_house():
         return None
     port = "" if settings.HTTPS_PORT == 443 else f":{settings.HTTPS_PORT}"
