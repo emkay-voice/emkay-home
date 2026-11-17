@@ -121,6 +121,12 @@ jobs:
       - name: Walk through the house
         run: python3 tools/smoke.py "$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' machine)"
 
+      - name: The emkay-home command
+        run: |
+          docker exec machine emkay-home | tee status.txt
+          grep -q "http://" status.txt
+          docker exec machine emkay-home help
+
       - if: failure()
         name: What happened
         run: |

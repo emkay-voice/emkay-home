@@ -51,6 +51,19 @@ removes it (and asks before deleting any data). In an LXC container, turn on
 *nesting* (and *keyctl* if unprivileged) – the installer tells you if it is
 missing.
 
+Afterwards, `emkay-home` on the machine looks after it:
+
+```sh
+emkay-home              # is it running, its address, a QR code
+emkay-home update       # the newest Emkay Home (the same as the one line again)
+emkay-home logs         # what the house is doing
+emkay-home restart | start | stop
+emkay-home uninstall
+```
+
+A new phone doesn't need the terminal: open the house's address and tap
+**Add an Emkay**.
+
 By hand, with Docker already there:
 
 ```sh
