@@ -184,6 +184,13 @@ async function start() {
   } else {
     fillLangs($("lang"), info.langs, info.lang);
     $("ca-fp").textContent = info.ca ? `SHA-256 ${info.ca.sha256}` : "";
+    $("panel-open").href = `https://${location.hostname}:${info.panel_port}/`;
+    // signed in on the way to the control panel: on to it
+    if (new URLSearchParams(location.search).get("next") === "panel") {
+      history.replaceState(null, "", "/");
+      location.href = $("panel-open").href;
+      return;
+    }
     show("house");
     refresh();
     emkay();

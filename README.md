@@ -94,7 +94,9 @@ phone / tablet with Emkay                       the house (docker compose, host 
 |---|---|---|
 | `ovos_messagebus`, `ovos_core` | [ovos-docker](https://github.com/OpenVoiceOS/ovos-docker)'s own (`smartgic/ovos-*:alpha`) | stock OpenVoiceOS, as ovos-docker's "server" compose runs it – no microphone or speaker in the house; the Emkays are the ears and the voice |
 | `emkay_home` | this repo ([`image/`](image/Dockerfile)) | **hivemind-core**, pinned to versions that start, and **the house page** ([`emkay_home/`](emkay_home)) |
-| `caddy` | `caddy:2` | one https address for everything, with the house's own certificate ([`caddy/Caddyfile`](caddy/Caddyfile)): the house page at `/`, hivemind-core at `/hivemind`, Emkay at `/emkay/` |
+| `emkay_home_panel` | this repo ([`panel/`](panel/Dockerfile)) | the stock [OpenVoiceOS control panel](https://github.com/OpenVoiceOS/ovos-control-panel) for the house's OVOS, on localhost |
+| `emkay_home_restarter` | `docker:cli` | restarts `ovos_core` when the house page asks (a new language); the only thing with the Docker socket, and no network |
+| `caddy` | `caddy:2` | one https address for everything, with the house's own certificate ([`caddy/Caddyfile`](caddy/Caddyfile)): the house page at `/`, hivemind-core at `/hivemind`, Emkay at `/emkay/`, the control panel on port 8500 |
 
 Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
 
@@ -127,6 +129,18 @@ Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
    pairing link `#hivemind=<base64 JSON>`: host, port 443, path `/hivemind`,
    key, password, language. Emkay saves it and is a satellite of the house
    from then on.
+
+### The control panel
+
+The OVOS in the house is looked after with OpenVoiceOS' own control panel –
+skills and plugins, settings, logs, the message bus – at
+`https://<house>:8500/` ("Control panel" on the house page). It sits behind
+the house page's sign-in: Caddy asks `emkay_home` first (`forward_auth`), and
+for a signed-in browser adds the panel's own token on the way, so there is one
+password for the whole house and the token is never shown. A browser that
+isn't signed in is sent to the house page and back. The panel edits the same
+`mycroft.conf` as `ovos_core` and asks ovos-core to install skills, so they
+land where they run. `PANEL_PORT` in `.env` moves it.
 
 ### Emkay, served from the house
 
@@ -192,7 +206,7 @@ would – welcome page, certificate, first start, "Add an Emkay", pairing, the
 list – and prints the pairing link:
 
 ```sh
-python tools/smoke.py 192.168.1.10 --http 8080 --https 8443
+python tools/smoke.py 192.168.1.10 --http 8080 --https 8443 [--panel 8500]
 ```
 
 ## License

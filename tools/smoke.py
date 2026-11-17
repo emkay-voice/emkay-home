@@ -5,6 +5,7 @@ the list – and print the pairing link Emkay would open.
 
     python tools/smoke.py 192.168.1.10                 # ports 80/443
     python tools/smoke.py 192.168.1.10 --http 8080 --https 8443 --password secret1
+    python tools/smoke.py 192.168.1.10 --panel 8500    # and the control panel
 
 A house that is already set up needs its --password. Standard library only.
 """
@@ -26,6 +27,7 @@ def main():
     p.add_argument("--https", type=int, default=443)
     p.add_argument("--password", default="emkay-smoke")
     p.add_argument("--lang", default="en-us")
+    p.add_argument("--panel", type=int, help="also the control panel, on this port")
     a = p.parse_args()
     http_base = f"http://{a.host}:{a.http}"
     https_base = f"https://{a.host}:{a.https}"
@@ -94,6 +96,27 @@ def main():
     clients = api("/api/clients")["clients"]
     me = [c for c in clients if c["name"] == "Smoke test"]
     assert me, "the new Emkay is not in the list"
+
+    if a.panel:
+        panel_base = f"https://{a.host}:{a.panel}"
+
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, *args, **kw):
+                return None
+
+        step("control panel: a stranger is sent to sign in")
+        stranger = urllib.request.build_opener(urllib.request.HTTPSHandler(context=ctx), NoRedirect)
+        try:
+            stranger.open(panel_base + "/", timeout=15)
+            raise AssertionError("the panel opened without signing in")
+        except urllib.error.HTTPError as e:
+            assert e.code in (302, 303, 307), e.code
+            assert "next=panel" in e.headers.get("Location", ""), e.headers.get("Location")
+
+        step("control panel: signed in, it opens")
+        with web.open(panel_base + "/api/status", timeout=30) as r:
+            assert r.status == 200, r.status
+            json.loads(r.read())
 
     print(json.dumps({"link": link, "ca": f.name, "client_id": me[-1]["id"]}))
 
