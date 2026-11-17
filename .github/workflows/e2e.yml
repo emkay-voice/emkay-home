@@ -38,7 +38,7 @@ jobs:
           echo "ovos_core never became healthy"; exit 1
 
       - name: Pair an Emkay
-        run: python3 tools/smoke.py "$(hostname -I | awk '{print $1}')" > pairing.json
+        run: python3 tools/smoke.py "$(hostname -I | awk '{print $1}')" --panel 8500 > pairing.json
 
       - name: Ask the house
         run: |

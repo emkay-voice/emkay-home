@@ -846,22 +846,36 @@ fetch_setup() {
 }
 
 step files fetch_setup || die "$(say files)"
-# Emkay Home's own image comes from ghcr.io; when it can't be pulled (not
-# published for this architecture, not public, no access to ghcr.io), the
-# installer builds it here from the same source – so the one line works
-# whatever happens to the image. EMKAY_HOME_BUILD=1 always builds.
-EH_IMAGE="ghcr.io/emkay-voice/emkay-home:$(sed -n 's/^EMKAY_HOME_VERSION=//p' "$DIR/compose/.env" 2>/dev/null)"
-[ "$EH_IMAGE" = "ghcr.io/emkay-voice/emkay-home:" ] && EH_IMAGE="ghcr.io/emkay-voice/emkay-home:latest"
+# Emkay Home's own images (the house page, the control panel) come from
+# ghcr.io; when they can't be pulled (not published for this architecture,
+# not public, no access to ghcr.io), the installer builds them here from the
+# same source – so the one line works whatever happens to the images.
+# EMKAY_HOME_BUILD=1 always builds.
+EH_TAG="$(sed -n 's/^EMKAY_HOME_VERSION=//p' "$DIR/compose/.env" 2>/dev/null)"
+EH_TAG="${EH_TAG:-latest}"
+# image name → its Dockerfile in the source (add new images of ours here)
+EH_IMAGES="emkay-home:image/Dockerfile emkay-home-panel:panel/Dockerfile"
+
+missing_images() {
+  local i
+  for i in $EH_IMAGES; do
+    $SUDO docker image inspect "ghcr.io/emkay-voice/${i%%:*}:$EH_TAG" > /dev/null 2>&1 || return 0
+  done
+  return 1
+}
 
 build_emkay_home() {
+  local i
   $SUDO rm -rf "$DIR/src" && $SUDO mkdir -p "$DIR/src" || return 1
   curl -fsSL "https://codeload.github.com/emkay-voice/emkay-home/tar.gz/$REF" \
     | $SUDO tar -xz -C "$DIR/src" --strip-components=1 || return 1
-  $SUDO docker build -f "$DIR/src/image/Dockerfile" -t "$EH_IMAGE" "$DIR/src"
+  for i in $EH_IMAGES; do
+    $SUDO docker build -f "$DIR/src/${i#*:}" -t "ghcr.io/emkay-voice/${i%%:*}:$EH_TAG" "$DIR/src" || return 1
+  done
 }
 
 step pull $DC pull --ignore-pull-failures || die "$(say pull)"
-if [ "${EMKAY_HOME_BUILD:-0}" = 1 ] || ! $SUDO docker image inspect "$EH_IMAGE" > /dev/null 2>&1; then
+if [ "${EMKAY_HOME_BUILD:-0}" = 1 ] || missing_images; then
   step build build_emkay_home || die "$(say build)"
 fi
 step start $DC up -d --no-build --remove-orphans || die "$(say start)"

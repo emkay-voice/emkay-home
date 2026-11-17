@@ -29,6 +29,9 @@ HTTPS_PORT = _int("HTTPS_PORT", 443)
 #: The root of the house's own CA ("tls internal"), as Caddy serves it.
 CA_URL = os.environ.get("EMKAY_HOME_CA_URL", f"http://127.0.0.1:{HTTP_PORT}/ca.crt")
 
+#: The OpenVoiceOS control panel, as Caddy serves it (https, its own port).
+PANEL_PORT = _int("PANEL_PORT", 8500)
+
 #: hivemind-core, behind Caddy at /hivemind.
 HIVEMIND_PORT = _int("HIVEMIND_PORT", 5678)
 HIVEMIND_PATH = "/hivemind"

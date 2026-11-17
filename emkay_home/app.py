@@ -23,7 +23,7 @@ from pathlib import Path
 
 import tornado.web
 
-from . import hive, house, settings, site
+from . import hive, house, panel, settings, site
 
 LOG = logging.getLogger("emkay-home")
 WEB = Path(__file__).parent / "web"
@@ -125,6 +125,19 @@ class Texts(Base):
         self.write(TEXTS_JSON)
 
 
+class PanelAuth(Base):
+    """Caddy's forward_auth for the control panel (panel.py): signed in to
+    Emkay Home → 200 with the panel's token for Caddy to pass on; not → to
+    the house page to sign in, and back."""
+    def get(self):
+        if self.https and self.current_user and panel.token():
+            self.set_header("Authorization", f"Bearer {panel.token()}")
+            self.set_status(200)
+            return
+        port = "" if settings.HTTPS_PORT == 443 else f":{settings.HTTPS_PORT}"
+        self.redirect(f"https://{self.request.host_name}{port}/?next=panel")
+
+
 class Ping(Base):
     """The welcome page fetches this over https to see whether the phone
     trusts the house's certificate yet."""
@@ -151,6 +164,7 @@ class Info(Base):
             "langs": settings.LANGS,
             "http_port": settings.HTTP_PORT,
             "https_port": settings.HTTPS_PORT,
+            "panel_port": settings.PANEL_PORT,
             "ca": {"sha256": house.ca_fingerprint(pem)} if pem else None,
         })
 
@@ -296,6 +310,7 @@ def make_app():
         (r"/api/invite", Invite),
         (r"/api/redeem", Redeem),
         (r"/api/emkay", Emkay),
+        (r"/api/panel-auth", PanelAuth),
         (r"/static/texts\.json", Texts),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": str(WEB)}),
     ], xheaders=False)

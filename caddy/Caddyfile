@@ -5,6 +5,8 @@
 #   https://<house>/emkay/      Emkay itself, served from the house
 #   http://<house>/             the welcome page: trust the house's certificate
 #   http(s)://<house>/ca.crt    the house's certificate (the root of its own CA)
+#   https://<house>:8500/       the OpenVoiceOS control panel, behind Emkay
+#                               Home's sign-in (emkay_home/panel.py)
 #
 # The certificate comes from Caddy's own CA ("tls internal") – made here,
 # offline, never public. It is made on demand for whatever LAN address or
@@ -75,4 +77,18 @@ http:// {
 	handle {
 		import page
 	}
+}
+
+# The control panel: Emkay Home says whether the browser is signed in, and
+# hands Caddy the panel's token to pass on (or sends the browser to sign in).
+https://:{$PANEL_PORT:8500} {
+	tls internal {
+		on_demand
+	}
+	forward_auth 127.0.0.1:{$EMKAY_HOME_PORT:8099} {
+		uri /api/panel-auth
+		header_up X-Forwarded-Proto https
+		copy_headers Authorization
+	}
+	reverse_proxy 127.0.0.1:8599
 }

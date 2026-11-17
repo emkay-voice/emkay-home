@@ -7,13 +7,14 @@ import argparse
 import asyncio
 import logging
 
-from . import app, hive, house, settings, site
+from . import app, hive, house, panel, settings, site
 
 
 async def main(run_hivemind=True):
     logging.basicConfig(level=logging.INFO, format="%(asctime)s emkay-home %(levelname)s %(message)s")
     house.seed_ovos_profile()
     hive.write_server_config()
+    panel.prepare()
     app.make_app().listen(settings.LISTEN_PORT, settings.LISTEN_HOST)
     logging.getLogger("emkay-home").info("the page is on %s:%s", settings.LISTEN_HOST, settings.LISTEN_PORT)
     tasks = [asyncio.create_task(site.keep_updated())]
