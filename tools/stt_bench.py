@@ -111,7 +111,7 @@ def load(model):
         # plain CTC decoding, as Emkay does on the phone (no language model)
         fe = AutoFeatureExtractor.from_pretrained(name)
         tok = AutoTokenizer.from_pretrained(name)
-        m = AutoModelForCTC.from_pretrained(name).eval()
+        m = AutoModelForCTC.from_pretrained(name, torch_dtype=torch.float32).eval()
 
         def hear(audio):
             x = fe(audio, sampling_rate=16000, return_tensors="pt")
