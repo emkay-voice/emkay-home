@@ -19,6 +19,9 @@ DIR="${EMKAY_HOME_DIR:-@DIR@}"
 SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo"
 DC="$SUDO docker compose --project-directory $DIR/compose -f $DIR/compose/docker-compose.yml"
 
+# All of it in a function, read whole before it runs: "update" replaces this
+# very file, and bash reads a script as it goes.
+main() {
 case "${1:-status}" in
   status|"") exec bash "$DIR/bin/home.sh" --dir "$DIR" --status ;;
   update)    curl -fsSL https://emkay.ai/home.sh | bash -s -- --dir "$DIR" ;;
@@ -30,3 +33,5 @@ case "${1:-status}" in
   -h|--help|help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//' ;;
   *) echo "emkay-home: unknown command “$1” – see: emkay-home help" >&2; exit 2 ;;
 esac
+}
+main "$@"; exit

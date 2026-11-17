@@ -835,8 +835,11 @@ fetch_setup() {
     curl -fsSL "$RAW/$REF/install/$f" | $SUDO tee "$DIR/bin/$f.new" > /dev/null || return 1
     $SUDO mv "$DIR/bin/$f.new" "$DIR/bin/$f"
   done
-  sed "s|@DIR@|$DIR|" "$DIR/bin/emkay-home" | $SUDO tee /usr/local/bin/emkay-home > /dev/null \
-    && $SUDO chmod 755 /usr/local/bin/emkay-home
+  # a new file put in place, not the old one written over: "emkay-home
+  # update" is running the old one while this runs
+  sed "s|@DIR@|$DIR|" "$DIR/bin/emkay-home" | $SUDO tee /usr/local/bin/emkay-home.new > /dev/null \
+    && $SUDO chmod 755 /usr/local/bin/emkay-home.new \
+    && $SUDO mv -f /usr/local/bin/emkay-home.new /usr/local/bin/emkay-home
   # .env is the house's own: written once, kept on updates
   if [ ! -f "$DIR/compose/.env" ]; then
     sed -e "s|^TZ=.*|TZ=$(host_tz)|" -e "s|^HTTP_PORT=.*|HTTP_PORT=$HTTP_PORT|" \
