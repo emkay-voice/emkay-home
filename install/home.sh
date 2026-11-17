@@ -18,6 +18,8 @@
 #   --ref REF          which emkay-home to install     [EMKAY_HOME_REF, main]
 #   --lang LANG        the installer's language        [EMKAY_HOME_LANG, else $LANG]
 #   --uninstall        stop and remove Emkay Home (asks before deleting data)
+#   --status           the house's state, address and QR code (what
+#                      `emkay-home` shows; nothing is changed)
 #
 # EMKAY_HOME_BUILD=1 builds Emkay Home's image here instead of pulling it
 # (it is built here anyway when it can't be pulled).
@@ -46,6 +48,7 @@ HTTP_PORT="${HTTP_PORT:-}"
 HTTPS_PORT="${HTTPS_PORT:-}"
 UI_LANG="${EMKAY_HOME_LANG:-}"
 UNINSTALL=0
+STATUS=0
 LOG="/tmp/emkay-home-install.log"
 
 while [ $# -gt 0 ]; do
@@ -56,6 +59,7 @@ while [ $# -gt 0 ]; do
     --ref) REF="$2"; shift ;;
     --lang) UI_LANG="$2"; shift ;;
     --uninstall) UNINSTALL=1 ;;
+    --status) STATUS=1 ;;
     -h|--help) sed -n '2,22p' "$0" 2>/dev/null | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -110,6 +114,11 @@ en|fail|Something went wrong. The last lines of the log (%s):
 en|un_ask|Also delete the house’s data – the paired Emkays and its certificate? [y/N] 
 en|un_done|Emkay Home is removed.
 en|un_kept|Its data is kept – installing again picks it up.
+en|status_up|Emkay Home is running (%s of %s services).
+en|status_down|Emkay Home isn’t running (%s of %s services) – start it with: emkay-home start
+en|add_hint|A new phone: open the address and tap “Add an Emkay”.
+en|cmds|More: emkay-home update · logs · restart · uninstall
+en|later|Run emkay-home to see this again.
 da|tagline|OpenVoiceOS til dit hus
 da|hello|Lad os sætte Emkay Home op på denne maskine.
 da|check|Kigger på maskinen
@@ -143,6 +152,11 @@ da|fail|Noget gik galt. De sidste linjer i loggen (%s):
 da|un_ask|Skal husets data også slettes – de parrede Emkays og certifikatet? [j/N] 
 da|un_done|Emkay Home er fjernet.
 da|un_kept|Dataene er gemt – en ny installation tager dem med.
+da|status_up|Emkay Home kører (%s af %s tjenester).
+da|status_down|Emkay Home kører ikke (%s af %s tjenester) – start det med: emkay-home start
+da|add_hint|En ny telefon: åbn adressen, og tryk på “Tilføj en Emkay”.
+da|cmds|Mere: emkay-home update · logs · restart · uninstall
+da|later|Kør emkay-home for at se dette igen.
 de|tagline|Das OpenVoiceOS für dein Haus
 de|hello|Richten wir Emkay Home auf diesem Rechner ein.
 de|check|Schaue mir den Rechner an
@@ -176,6 +190,11 @@ de|fail|Etwas ist schiefgegangen. Die letzten Zeilen des Logs (%s):
 de|un_ask|Auch die Daten des Hauses löschen – die gekoppelten Emkays und sein Zertifikat? [j/N] 
 de|un_done|Emkay Home ist entfernt.
 de|un_kept|Die Daten bleiben – eine neue Installation übernimmt sie.
+de|status_up|Emkay Home läuft (%s von %s Diensten).
+de|status_down|Emkay Home läuft nicht (%s von %s Diensten) – starte es mit: emkay-home start
+de|add_hint|Ein neues Handy: Adresse öffnen und auf „Ein Emkay hinzufügen“ tippen.
+de|cmds|Mehr: emkay-home update · logs · restart · uninstall
+de|later|Mit emkay-home siehst du das hier wieder.
 es|tagline|El OpenVoiceOS para tu casa
 es|hello|Vamos a instalar Emkay Home en esta máquina.
 es|check|Mirando esta máquina
@@ -209,6 +228,11 @@ es|fail|Algo ha salido mal. Las últimas líneas del registro (%s):
 es|un_ask|¿Borrar también los datos de la casa – los Emkay emparejados y su certificado? [s/N] 
 es|un_done|Emkay Home se ha quitado.
 es|un_kept|Los datos se conservan – una nueva instalación los recupera.
+es|status_up|Emkay Home está en marcha (%s de %s servicios).
+es|status_down|Emkay Home no está en marcha (%s de %s servicios) – arráncalo con: emkay-home start
+es|add_hint|Un teléfono nuevo: abre la dirección y toca «Añadir un Emkay».
+es|cmds|Más: emkay-home update · logs · restart · uninstall
+es|later|Ejecuta emkay-home para ver esto de nuevo.
 ca|tagline|L’OpenVoiceOS per a casa teva
 ca|hello|Instal·lem Emkay Home en aquesta màquina.
 ca|check|Mirant aquesta màquina
@@ -242,6 +266,11 @@ ca|fail|Alguna cosa ha fallat. Les darreres línies del registre (%s):
 ca|un_ask|Vols esborrar també les dades de la casa – els Emkay aparellats i el certificat? [s/N] 
 ca|un_done|Emkay Home s’ha eliminat.
 ca|un_kept|Les dades es conserven – una nova instal·lació les recupera.
+ca|status_up|Emkay Home funciona (%s de %s serveis).
+ca|status_down|Emkay Home no funciona (%s de %s serveis) – engega’l amb: emkay-home start
+ca|add_hint|Un telèfon nou: obre l’adreça i toca «Afegeix un Emkay».
+ca|cmds|Més: emkay-home update · logs · restart · uninstall
+ca|later|Executa emkay-home per tornar a veure això.
 gl|tagline|O OpenVoiceOS para a túa casa
 gl|hello|Imos instalar Emkay Home nesta máquina.
 gl|check|Mirando esta máquina
@@ -275,6 +304,11 @@ gl|fail|Algo saíu mal. As últimas liñas do rexistro (%s):
 gl|un_ask|Borrar tamén os datos da casa – os Emkay emparellados e o seu certificado? [s/N] 
 gl|un_done|Emkay Home quitouse.
 gl|un_kept|Os datos consérvanse – unha nova instalación recupéraos.
+gl|status_up|Emkay Home está en marcha (%s de %s servizos).
+gl|status_down|Emkay Home non está en marcha (%s de %s servizos) – iníciao con: emkay-home start
+gl|add_hint|Un teléfono novo: abre o enderezo e toca «Engadir un Emkay».
+gl|cmds|Máis: emkay-home update · logs · restart · uninstall
+gl|later|Executa emkay-home para ver isto de novo.
 eu|tagline|Zure etxerako OpenVoiceOS-a
 eu|hello|Instala dezagun Emkay Home makina honetan.
 eu|check|Makina honi begiratzen
@@ -308,6 +342,11 @@ eu|fail|Zerbaitek huts egin du. Erregistroaren azken lerroak (%s):
 eu|un_ask|Etxearen datuak ere ezabatu – parekatutako Emkayak eta bere ziurtagiria? [b/E] 
 eu|un_done|Emkay Home kendu da.
 eu|un_kept|Datuak gordetzen dira – instalazio berri batek berreskuratzen ditu.
+eu|status_up|Emkay Home martxan dago (%s/%s zerbitzu).
+eu|status_down|Emkay Home ez dago martxan (%s/%s zerbitzu) – abiarazi honela: emkay-home start
+eu|add_hint|Telefono berri bat: ireki helbidea eta sakatu «Gehitu Emkay bat».
+eu|cmds|Gehiago: emkay-home update · logs · restart · uninstall
+eu|later|Exekutatu emkay-home hau berriro ikusteko.
 fr|tagline|L’OpenVoiceOS pour votre maison
 fr|hello|Installons Emkay Home sur cette machine.
 fr|check|J’examine cette machine
@@ -341,6 +380,11 @@ fr|fail|Un problème est survenu. Les dernières lignes du journal (%s) :
 fr|un_ask|Supprimer aussi les données de la maison – les Emkay appairés et son certificat ? [o/N] 
 fr|un_done|Emkay Home est supprimé.
 fr|un_kept|Les données sont gardées – une nouvelle installation les reprend.
+fr|status_up|Emkay Home fonctionne (%s services sur %s).
+fr|status_down|Emkay Home ne fonctionne pas (%s services sur %s) – démarrez-le avec : emkay-home start
+fr|add_hint|Un nouveau téléphone : ouvrez l’adresse et touchez « Ajouter un Emkay ».
+fr|cmds|Plus : emkay-home update · logs · restart · uninstall
+fr|later|Lancez emkay-home pour revoir ceci.
 it|tagline|L’OpenVoiceOS per la tua casa
 it|hello|Installiamo Emkay Home su questa macchina.
 it|check|Do un’occhiata a questa macchina
@@ -374,6 +418,11 @@ it|fail|Qualcosa è andato storto. Le ultime righe del registro (%s):
 it|un_ask|Cancellare anche i dati della casa – gli Emkay abbinati e il suo certificato? [s/N] 
 it|un_done|Emkay Home è stato rimosso.
 it|un_kept|I dati restano – una nuova installazione li riprende.
+it|status_up|Emkay Home è in funzione (%s servizi su %s).
+it|status_down|Emkay Home non è in funzione (%s servizi su %s) – avvialo con: emkay-home start
+it|add_hint|Un nuovo telefono: apri l’indirizzo e tocca «Aggiungi un Emkay».
+it|cmds|Altro: emkay-home update · logs · restart · uninstall
+it|later|Esegui emkay-home per rivedere questo.
 nl|tagline|Het OpenVoiceOS voor je huis
 nl|hello|Laten we Emkay Home op deze machine zetten.
 nl|check|Ik bekijk deze machine
@@ -407,6 +456,11 @@ nl|fail|Er ging iets mis. De laatste regels van het logboek (%s):
 nl|un_ask|Ook de gegevens van het huis wissen – de gekoppelde Emkays en het certificaat? [j/N] 
 nl|un_done|Emkay Home is verwijderd.
 nl|un_kept|De gegevens blijven – een nieuwe installatie neemt ze mee.
+nl|status_up|Emkay Home draait (%s van %s diensten).
+nl|status_down|Emkay Home draait niet (%s van %s diensten) – start het met: emkay-home start
+nl|add_hint|Een nieuwe telefoon: open het adres en tik op ‘Een Emkay toevoegen’.
+nl|cmds|Meer: emkay-home update · logs · restart · uninstall
+nl|later|Voer emkay-home uit om dit opnieuw te zien.
 pt|tagline|O OpenVoiceOS para a sua casa
 pt|hello|Vamos instalar o Emkay Home nesta máquina.
 pt|check|A ver esta máquina
@@ -440,6 +494,11 @@ pt|fail|Algo correu mal. As últimas linhas do registo (%s):
 pt|un_ask|Apagar também os dados da casa – os Emkays emparelhados e o certificado? [s/N] 
 pt|un_done|O Emkay Home foi removido.
 pt|un_kept|Os dados ficam guardados – uma nova instalação recupera-os.
+pt|status_up|O Emkay Home está a funcionar (%s de %s serviços).
+pt|status_down|O Emkay Home não está a funcionar (%s de %s serviços) – inicie-o com: emkay-home start
+pt|add_hint|Um telemóvel novo: abra o endereço e toque em “Adicionar um Emkay”.
+pt|cmds|Mais: emkay-home update · logs · restart · uninstall
+pt|later|Execute emkay-home para ver isto de novo.
 pt-br|check|Olhando esta máquina
 pt-br|ram_low|Só %s de RAM – o Emkay Home quer 2 GB ou mais (4 GB é melhor). Continuando.
 pt-br|disk_low|Só %s livres – o Emkay Home quer cerca de 5 GB. Continuando.
@@ -463,13 +522,22 @@ pt-br|next|Lá você escolhe o idioma e uma senha – e adiciona o seu primeiro 
 pt-br|fail|Algo deu errado. As últimas linhas do log (%s):
 pt-br|un_ask|Apagar também os dados da casa – os Emkays pareados e o certificado? [s/N] 
 pt-br|un_kept|Os dados ficam guardados – uma nova instalação os recupera.
+pt-br|status_up|O Emkay Home está funcionando (%s de %s serviços).
+pt-br|status_down|O Emkay Home não está funcionando (%s de %s serviços) – inicie com: emkay-home start
+pt-br|add_hint|Um celular novo: abra o endereço e toque em “Adicionar um Emkay”.
+pt-br|later|Execute emkay-home para ver isto de novo.
 '
 
 # The installer's language: --lang, then $LANG/$LC_ALL ("da_DK.UTF-8" → da).
 # pt-br falls back to pt, then English; every other language to English.
 pick_lang() {
-  local l="${UI_LANG:-${LC_ALL:-${LANG:-en}}}"
-  l="$(printf '%s' "$l" | tr 'A-Z_' 'a-z-' | cut -d. -f1)"
+  # the first of these that names a language (not "C" or "POSIX", which
+  # containers and minimal systems often set)
+  local l="" v
+  for v in "$UI_LANG" "${LANGUAGE%%:*}" "$LC_ALL" "$LC_MESSAGES" "$LANG"; do
+    case "$v" in ""|C|C.*|POSIX) ;; *) l="$v"; break ;; esac
+  done
+  l="$(printf '%s' "${l:-en}" | tr 'A-Z_' 'a-z-' | cut -d. -f1)"
   case "$l" in
     pt-br*) echo pt-br ;;
     da*|de*|es*|ca*|gl*|eu*|fr*|it*|nl*|pt*) echo "${l%%-*}" ;;
@@ -562,7 +630,52 @@ if [ "$UNINSTALL" = 1 ]; then
     *) step un_done $DC down --remove-orphans; note "$(say un_kept)" ;;
   esac
   $SUDO rm -rf "$DIR"
+  $SUDO rm -f /usr/local/bin/emkay-home
   printf '\n'; exit 0
+fi
+
+# --- the address ------------------------------------------------------------------
+
+# Where the house is, for a person: its address (and name, with Avahi), and a
+# QR code to open it on a phone – at the end of an install and in --status.
+show_address() {
+  local port_http ip port url
+  port_http="$(sed -n 's/^HTTP_PORT=//p' "$DIR/compose/.env" 2>/dev/null)"; port_http="${port_http:-80}"
+  ip="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{ for (i = 1; i < NF; i++) if ($i == "src") print $(i+1) }')"
+  [ -z "$ip" ] && ip="$(hostname -I 2>/dev/null | awk '{ print $1 }')"
+  port=""; [ "$port_http" != 80 ] && port=":$port_http"
+  url="http://$ip$port/"
+  printf '  %s\n\n' "$(say open)"
+  printf '      %s%s%s\n' "$C_ACCENT$C_BOLD" "$url" "$C_OFF"
+  # the machine's own name, when Avahi announces it on the network
+  if systemctl is-active --quiet avahi-daemon 2>/dev/null; then
+    printf '      %s%s%s\n' "$C_ACCENT" "http://$(hostname).local$port/" "$C_OFF"
+  fi
+  # a QR code for the phone, drawn by emkay_home's own segno (nothing to install)
+  if [ "$TTY" = 1 ]; then
+    printf '\n  %s\n' "$(say scan)"
+    $SUDO docker exec emkay_home python -c \
+      'import sys, segno; segno.make(sys.argv[1], error="l").terminal(compact=True, border=2)' "$url" 2>/dev/null \
+      | sed 's/^/    /'
+  fi
+}
+
+# --- status (emkay-home) ------------------------------------------------------------
+
+if [ "$STATUS" = 1 ]; then
+  banner
+  total="$($DC config --services 2>/dev/null | wc -l)"
+  up="$($DC ps --services --status running 2>/dev/null | wc -l)"
+  if [ "$total" -gt 0 ] && [ "$up" -eq "$total" ]; then
+    ok "$(say status_up "$up" "$total")"
+    printf '\n'
+    show_address
+    printf '\n  %s\n' "$(say add_hint)"
+  else
+    warn "$(say status_down "$up" "$total")"
+  fi
+  printf '  %s%s%s\n\n' "$C_DIM" "$(say cmds)" "$C_OFF"
+  exit 0
 fi
 
 # --- the machine ----------------------------------------------------------------
@@ -593,25 +706,65 @@ esac
 
 # Per distribution family. get.docker.com (Docker's own script) where it is
 # supported; the distribution's packages elsewhere.
+#
+# The families (what CI tests is in .github/workflows/distros.yml):
+#   debian, ubuntu, raspbian, fedora, centos, rhel  get.docker.com
+#   rocky, almalinux (and other RHEL rebuilds)      Docker's CentOS repository
+#   linuxmint, pop, … (ID_LIKE ubuntu/debian)        the distribution's docker.io
+#   arch, manjaro, endeavouros (ID_LIKE arch)        pacman
+#   opensuse-*, sles                                 zypper
+#   alpine                                           apk + OpenRC
+docker_family() {
+  case "${ID:-}" in
+    debian|ubuntu|raspbian|fedora|centos|rhel) echo getdocker ;;
+    rocky|almalinux|ol|centos-stream) echo rhel-repo ;;
+    arch|manjaro|endeavouros|garuda|cachyos) echo pacman ;;
+    alpine) echo apk ;;
+    opensuse*|sles|sled) echo zypper ;;
+    *) case " ${ID_LIKE:-} " in
+         *" arch "*) echo pacman ;;
+         *" rhel "*|*" centos "*) echo rhel-repo ;;
+         *" fedora "*) echo getdocker ;;
+         *" ubuntu "*|*" debian "*) echo apt ;;
+         *suse*) echo zypper ;;
+         *) echo unknown ;;
+       esac ;;
+  esac
+}
+
 install_docker() {
-  case "${ID:-} ${ID_LIKE:-}" in
-    *debian*|*ubuntu*|*raspbian*|*fedora*|*centos*|*rhel*)
-      case "${ID:-}" in
-        debian|ubuntu|raspbian|fedora|centos|rhel|rocky|almalinux)
-          curl -fsSL https://get.docker.com | $SUDO sh ;;
-        *)   # Mint, Pop!_OS, … (ID_LIKE ubuntu/debian): the distribution's own
-          $SUDO apt-get update && $SUDO apt-get install -y docker.io docker-compose-v2 \
-            || $SUDO apt-get install -y docker.io docker-compose-plugin ;;
-      esac ;;
-    *arch*) $SUDO pacman -Sy --noconfirm --needed docker docker-compose ;;
-    *suse*) $SUDO zypper -n install docker docker-compose ;;
-    *alpine*) $SUDO apk add docker docker-cli-compose && $SUDO rc-update add docker default ;;
+  case "$(docker_family)" in
+    getdocker) curl -fsSL https://get.docker.com | $SUDO sh || return 1 ;;
+    rhel-repo)
+      $SUDO dnf -y install dnf-plugins-core \
+        && $SUDO dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo \
+        && $SUDO dnf -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin || return 1 ;;
+    apt)   # Mint, Pop!_OS, …: the distribution's own packages
+      $SUDO apt-get update && { $SUDO apt-get install -y docker.io docker-compose-v2 \
+        || $SUDO apt-get install -y docker.io docker-compose-plugin; } || return 1 ;;
+    pacman) $SUDO pacman -Sy --noconfirm --needed docker docker-compose || return 1 ;;
+    zypper) $SUDO zypper -n install docker docker-compose || return 1 ;;
+    apk)
+      $SUDO apk add docker docker-cli-compose && $SUDO rc-update add docker default \
+        && $SUDO rc-service docker start || return 1
+      return 0 ;;
     *) return 3 ;;
   esac
   # systemd only where it is running (not in every container); else the
-  # init script, as on Alpine or a minimal LXC
+  # init script, as in a minimal LXC
   if [ -d /run/systemd/system ]; then $SUDO systemctl enable --now docker
   else $SUDO service docker start; fi
+}
+
+# A freshly started Docker takes a moment before it answers (OpenRC returns
+# before the daemon is up) – wait for it, up to a minute.
+wait_docker() {
+  local i
+  for i in $(seq 1 30); do
+    $SUDO docker info > /dev/null 2>&1 && return 0
+    sleep 2
+  done
+  return 1
 }
 
 if command -v docker >/dev/null 2>&1 && $SUDO docker compose version >/dev/null 2>&1; then
@@ -622,6 +775,7 @@ else
   [ $rc -eq 3 ] && die "$(say docker_unknown "$OS_NAME")" nolog
   [ $rc -ne 0 ] && die "$(say docker_install)"
 fi
+wait_docker >> "$LOG" 2>&1
 
 # Can Docker start a container here? (In an LXC container without "nesting"
 # it can't.) Caddy is needed anyway, so this costs nothing extra.
@@ -671,6 +825,14 @@ fetch_setup() {
     curl -fsSL "$RAW/$REF/$f" | $SUDO tee "$DIR/$f.new" > /dev/null || return 1
     $SUDO mv "$DIR/$f.new" "$DIR/$f"
   done
+  # the `emkay-home` command, and the installer it runs for its texts
+  $SUDO mkdir -p "$DIR/bin" || return 1
+  for f in home.sh emkay-home; do
+    curl -fsSL "$RAW/$REF/install/$f" | $SUDO tee "$DIR/bin/$f.new" > /dev/null || return 1
+    $SUDO mv "$DIR/bin/$f.new" "$DIR/bin/$f"
+  done
+  sed "s|@DIR@|$DIR|" "$DIR/bin/emkay-home" | $SUDO tee /usr/local/bin/emkay-home > /dev/null \
+    && $SUDO chmod 755 /usr/local/bin/emkay-home
   # .env is the house's own: written once, kept on updates
   if [ ! -f "$DIR/compose/.env" ]; then
     sed -e "s|^TZ=.*|TZ=$(host_tz)|" -e "s|^HTTP_PORT=.*|HTTP_PORT=$HTTP_PORT|" \
@@ -714,23 +876,7 @@ step wait wait_house || die "$(say wait_fail)"
 
 # --- done -----------------------------------------------------------------------
 
-IP="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{ for (i = 1; i < NF; i++) if ($i == "src") print $(i+1) }')"
-[ -z "$IP" ] && IP="$(hostname -I 2>/dev/null | awk '{ print $1 }')"
-PORT=""; [ "$HTTP_PORT" != 80 ] && PORT=":$HTTP_PORT"
-URL="http://$IP$PORT/"
-
 printf '\n  %s%s%s\n\n' "$C_BOLD" "$(say "$([ "$UPDATE" = 1 ] && echo updated || echo ready)")" "$C_OFF"
-printf '  %s\n\n' "$(say open)"
-printf '      %s%s%s\n' "$C_ACCENT$C_BOLD" "$URL" "$C_OFF"
-# the machine's own name, when Avahi announces it on the network
-if systemctl is-active --quiet avahi-daemon 2>/dev/null; then
-  printf '      %s%s%s\n' "$C_ACCENT" "http://$(hostname).local$PORT/" "$C_OFF"
-fi
-# a QR code for the phone, drawn by emkay_home's own segno (nothing to install)
-if [ "$TTY" = 1 ]; then
-  printf '\n  %s\n' "$(say scan)"
-  $SUDO docker exec emkay_home python -c \
-    'import sys, segno; segno.make(sys.argv[1], error="l").terminal(compact=True, border=2)' "$URL" 2>/dev/null \
-    | sed 's/^/    /'
-fi
-printf '\n  %s%s%s\n\n' "$C_DIM" "$(say next)" "$C_OFF"
+show_address
+printf '\n  %s%s%s\n' "$C_DIM" "$(say next)" "$C_OFF"
+printf '  %s%s%s\n\n' "$C_DIM" "$(say later)" "$C_OFF"
