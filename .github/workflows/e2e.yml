@@ -1,0 +1,50 @@
+# The whole house, end to end: install it, wait for OpenVoiceOS to be ready,
+# pair an Emkay and ask it something – does the house answer?
+# (The other workflows walk through the page and pairing; this one needs the
+# real ovos_core, its skills and the bus, and takes several minutes.)
+name: End to end
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ask:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install the house
+        run: bash install/home.sh --ref "${{ github.event.pull_request.head.sha || github.sha }}"
+
+      - name: Wait for OpenVoiceOS (skills installed and loaded)
+        run: |
+          DC="sudo docker compose --project-directory /opt/emkay-home/compose"
+          for i in $(seq 1 120); do
+            state="$($DC ps --format '{{.Service}} {{.State}} {{.Health}}' ovos_core)"
+            echo "$(date +%T) $state"
+            case "$state" in *healthy*) [ "${state##* }" = healthy ] && exit 0 ;; esac
+            sleep 10
+          done
+          echo "ovos_core never became healthy"; exit 1
+
+      - name: Pair an Emkay
+        run: python3 tools/smoke.py "$(hostname -I | awk '{print $1}')" > pairing.json
+
+      - name: Ask the house
+        run: |
+          export NODE_EXTRA_CA_CERTS="$(python3 -c "import json;print(json.load(open('pairing.json'))['ca'])")"
+          node tools/ask.mjs pairing.json "what time is it" 120
+
+      - if: always()
+        name: What the house did
+        run: |
+          DC="sudo docker compose --project-directory /opt/emkay-home/compose"
+          $DC ps
+          for s in ovos_core ovos_messagebus emkay_home; do echo "=== $s"; $DC logs --no-color --tail 120 $s; done
