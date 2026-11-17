@@ -124,8 +124,25 @@ def load(model):
     raise SystemExit(f"unknown model kind: {model}")
 
 
+def decode_audio(path, sampling_rate=16000):
+    """A WAV as float32 mono at 16 kHz (no PyAV: its newest release and
+    faster-whisper's decode_audio don't get along)."""
+    import wave
+    import numpy as np
+    with wave.open(path) as w:
+        rate, ch, width = w.getframerate(), w.getnchannels(), w.getsampwidth()
+        raw = w.readframes(w.getnframes())
+    a = np.frombuffer(raw, dtype={2: np.int16, 4: np.int32}[width]).astype(np.float32)
+    a /= 32768.0 if width == 2 else 2147483648.0
+    if ch > 1:
+        a = a.reshape(-1, ch).mean(axis=1)
+    if rate != sampling_rate:
+        n = int(len(a) * sampling_rate / rate)
+        a = np.interp(np.linspace(0, len(a) - 1, n), np.arange(len(a)), a).astype(np.float32)
+    return a
+
+
 def run(model, clipdir):
-    from faster_whisper import decode_audio
     clipdir = Path(clipdir)
     index = json.loads((clipdir / "index.json").read_text())
     t0 = time.time()
