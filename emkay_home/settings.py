@@ -14,6 +14,10 @@ def _int(name, default):
 DATA = Path(os.environ.get("EMKAY_HOME_DATA", "/data"))
 #: The OVOS user config (~/.config/mycroft of the ovos_core container).
 OVOS_CONFIG = Path(os.environ.get("EMKAY_HOME_OVOS_CONFIG", "/ovos-config"))
+#: Where emkay_home leaves requests for the restarter (compose: emkay_home_restarter),
+#: e.g. "restart-ovos_core" after the language changed.
+REQUESTS = Path(os.environ.get("EMKAY_HOME_REQUESTS", "/requests"))
+
 #: Where the page listens; only Caddy talks to it.
 LISTEN_HOST = os.environ.get("EMKAY_HOME_LISTEN", "127.0.0.1")
 LISTEN_PORT = _int("EMKAY_HOME_PORT", 8099)

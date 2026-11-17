@@ -15,8 +15,8 @@ ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_RO
 
 # the same uid as ovos-docker's ovos user, so the shared OVOS config is writable
 RUN groupadd --gid 1000 emkay && useradd --uid 1000 --gid 1000 -m emkay \
- && mkdir -p /data /ovos-config /emkay-site /home/emkay/.local/share/hivemind-core /home/emkay/.config/hivemind-core \
- && chown -R emkay:emkay /data /ovos-config /emkay-site /home/emkay
+ && mkdir -p /data /requests /home/emkay/.config/mycroft /ovos-config /emkay-site /home/emkay/.local/share/hivemind-core /home/emkay/.config/hivemind-core \
+ && chown -R emkay:emkay /data /requests /ovos-config /emkay-site /home/emkay
 
 COPY image/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt
