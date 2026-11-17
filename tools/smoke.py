@@ -117,6 +117,8 @@ def main():
         with web.open(panel_base + "/api/status", timeout=30) as r:
             assert r.status == 200, r.status
             json.loads(r.read())
+        with web.open(panel_base + "/", timeout=30) as r:
+            assert b'id="emkay-theme"' in r.read(), "the panel is not in Emkay's colours"
 
     print(json.dumps({"link": link, "ca": f.name, "client_id": me[-1]["id"]}))
 
