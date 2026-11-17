@@ -32,6 +32,7 @@ volumes:
   hivemind_config:
   emkay_home_data:  # the house page's password and language
   emkay_site:       # Emkay itself, served from the house at /emkay/
+  emkay_home_requests:  # emkay_home's requests to the restarter
   caddy_data:       # the house's certificate authority – keep it, or every device must trust a new one
   caddy_config:
 
@@ -89,10 +90,40 @@ services:
       EMKAY_HOME_NAMES: ${EMKAY_HOME_NAMES:-}
     volumes:
       - emkay_home_data:/data
+      - emkay_home_requests:/requests
       - emkay_site:/emkay-site
       - ovos_config:/ovos-config
+      # the same OVOS config for hivemind-core: the sessions it makes for the
+      # Emkays then use the house's intent pipeline, not a library default
+      - ovos_config:/home/emkay/.config/mycroft:ro
       - hivemind_data:/home/emkay/.local/share/hivemind-core
       - hivemind_config:/home/emkay/.config/hivemind-core
+
+  # Restarts ovos_core when emkay_home asks (a new language is loaded only when
+  # OVOS starts). It alone holds the Docker socket – with no network, and able
+  # to do nothing else – so the page that faces the LAN never does.
+  emkay_home_restarter:
+    container_name: emkay_home_restarter
+    image: docker.io/library/docker:cli
+    restart: unless-stopped
+    network_mode: none
+    logging: *logging
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - emkay_home_requests:/requests
+    command:
+      - sh
+      - -c
+      - |
+        echo "waiting for requests"
+        while :; do
+          if [ -f /requests/restart-ovos_core ]; then
+            rm -f /requests/restart-ovos_core
+            echo "$(date '+%F %T') restarting ovos_core"
+            docker restart ovos_core
+          fi
+          sleep 3
+        done
 
   caddy:
     container_name: emkay_home_caddy

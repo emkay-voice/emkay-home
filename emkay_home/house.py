@@ -64,6 +64,18 @@ def seed_ovos_profile():
             LOG.info("seeded %s", dst)
 
 
+def restart_ovos():
+    """Ask for ovos_core to be restarted (it loads a new language's skills
+    only when it starts). The restarter container does it: it alone has
+    Docker, and it can do nothing but restart ovos_core."""
+    try:
+        settings.REQUESTS.mkdir(parents=True, exist_ok=True)
+        (settings.REQUESTS / "restart-ovos_core").touch()
+        LOG.info("asked for ovos_core to be restarted")
+    except OSError as e:
+        LOG.warning("could not ask for ovos_core to be restarted: %s", e)
+
+
 def set_ovos_lang(lang):
     """The house's language, in the OVOS user config (mycroft.conf)."""
     path = settings.OVOS_CONFIG / "mycroft.conf"
@@ -71,8 +83,11 @@ def set_ovos_lang(lang):
         conf = json.loads(path.read_text())
     except (OSError, ValueError):
         conf = {}
+    changed = conf.get("lang") != lang
     conf["lang"] = lang
     path.write_text(json.dumps(conf, indent=2))
+    if changed:
+        restart_ovos()
 
 
 # --- addresses ----------------------------------------------------------------

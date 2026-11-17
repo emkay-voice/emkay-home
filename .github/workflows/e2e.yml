@@ -20,7 +20,10 @@ jobs:
         with:
           node-version: 22
 
+      # this pull request's Emkay Home, built here (not the published image)
       - name: Install the house
+        env:
+          EMKAY_HOME_BUILD: "1"
         run: bash install/home.sh --ref "${{ github.event.pull_request.head.sha || github.sha }}"
 
       - name: Wait for OpenVoiceOS (skills installed and loaded)
@@ -42,8 +45,9 @@ jobs:
           export NODE_EXTRA_CA_CERTS="$(python3 -c "import json;print(json.load(open('pairing.json'))['ca'])")"
           node tools/ask.mjs pairing.json "what time is it" 120
 
-      # The house in Danish, as a person sets it up: the language on the page,
-      # then OVOS restarted to load its skills in that language.
+      # The house in Danish, as a person sets it up: the language on the page –
+      # emkay_home then has ovos_core restarted (emkay_home_restarter) to load
+      # its skills in that language.
       - name: The house in Danish
         run: |
           DC="sudo docker compose --project-directory /opt/emkay-home/compose"
@@ -59,7 +63,12 @@ jobs:
           api("/api/login", {"password": "emkay-smoke"}); print(api("/api/lang", {"lang": "da-dk"}))
           EOF
           sudo docker exec ovos_core cat /home/ovos/.config/mycroft/mycroft.conf | head -5
-          $DC restart ovos_core
+          before="$(sudo docker inspect -f '{{.State.StartedAt}}' ovos_core)"
+          for i in $(seq 1 30); do
+            [ "$(sudo docker inspect -f '{{.State.StartedAt}}' ovos_core)" != "$before" ] && echo "ovos_core restarted" && break
+            sleep 2
+          done
+          [ "$(sudo docker inspect -f '{{.State.StartedAt}}' ovos_core)" != "$before" ] || { echo "ovos_core was not restarted"; $DC logs emkay_home_restarter; exit 1; }
           sleep 20
           for i in $(seq 1 60); do
             state="$($DC ps --format '{{.Health}}' ovos_core)"; echo "$(date +%T) $state"
@@ -74,4 +83,4 @@ jobs:
         run: |
           DC="sudo docker compose --project-directory /opt/emkay-home/compose"
           $DC ps
-          for s in ovos_core ovos_messagebus emkay_home; do echo "=== $s"; $DC logs --no-color --tail 120 $s; done
+          for s in ovos_core ovos_messagebus emkay_home emkay_home_restarter; do echo "=== $s"; $DC logs --no-color --tail 120 $s; done
