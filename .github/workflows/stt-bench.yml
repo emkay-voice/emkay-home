@@ -58,7 +58,7 @@ jobs:
           path: clips
       - name: Install
         run: |
-          pip install -q faster-whisper
+          pip install -q faster-whisper soundfile
           case "${{ matrix.model }}" in
             w2v:*|fw:edda) pip install -q torch --index-url https://download.pytorch.org/whl/cpu
                            pip install -q transformers ctranslate2 ;;

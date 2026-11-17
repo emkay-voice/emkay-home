@@ -106,36 +106,29 @@ def load(model):
         return hear
     if kind == "w2v":
         import torch
-        from transformers import AutoModelForCTC, AutoProcessor
+        from transformers import AutoFeatureExtractor, AutoModelForCTC, AutoTokenizer
         torch.set_num_threads(os.cpu_count() or 4)
-        proc = AutoProcessor.from_pretrained(name)
+        # plain CTC decoding, as Emkay does on the phone (no language model)
+        fe = AutoFeatureExtractor.from_pretrained(name)
+        tok = AutoTokenizer.from_pretrained(name)
         m = AutoModelForCTC.from_pretrained(name).eval()
 
         def hear(audio):
-            x = proc(audio, sampling_rate=16000, return_tensors="pt")
+            x = fe(audio, sampling_rate=16000, return_tensors="pt")
             with torch.inference_mode():
                 ids = m(**x).logits.argmax(-1)
-            # a processor with a language model decodes logits; one without, ids
-            try:
-                return proc.batch_decode(ids)[0].strip()
-            except Exception:  # noqa: BLE001
-                return proc.tokenizer.batch_decode(ids)[0].strip()
+            return tok.batch_decode(ids)[0].strip()
         return hear
     raise SystemExit(f"unknown model kind: {model}")
 
 
 def decode_audio(path, sampling_rate=16000):
-    """A WAV as float32 mono at 16 kHz (no PyAV: its newest release and
-    faster-whisper's decode_audio don't get along)."""
-    import wave
+    """A sound file as float32 mono at 16 kHz (soundfile, not PyAV: its
+    newest release and faster-whisper's decode_audio don't get along)."""
     import numpy as np
-    with wave.open(path) as w:
-        rate, ch, width = w.getframerate(), w.getnchannels(), w.getsampwidth()
-        raw = w.readframes(w.getnframes())
-    a = np.frombuffer(raw, dtype={2: np.int16, 4: np.int32}[width]).astype(np.float32)
-    a /= 32768.0 if width == 2 else 2147483648.0
-    if ch > 1:
-        a = a.reshape(-1, ch).mean(axis=1)
+    import soundfile as sf
+    a, rate = sf.read(path, dtype="float32", always_2d=True)
+    a = a.mean(axis=1)
     if rate != sampling_rate:
         n = int(len(a) * sampling_rate / rate)
         a = np.interp(np.linspace(0, len(a) - 1, n), np.arange(len(a)), a).astype(np.float32)
