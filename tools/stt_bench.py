@@ -139,7 +139,10 @@ def decode_audio(path, sampling_rate=16000):
     if rate != sampling_rate:
         n = int(len(a) * sampling_rate / rate)
         a = np.interp(np.linspace(0, len(a) - 1, n), np.arange(len(a)), a).astype(np.float32)
-    return a
+    # half a second of quiet first, as an Emkay's recording has (it starts
+    # when the wake word is heard): Piper's clips start on the first sound,
+    # and Whisper models drop the first word of such a clip
+    return np.concatenate([np.zeros(sampling_rate // 2, np.float32), a])
 
 
 def run(model, clipdir):
