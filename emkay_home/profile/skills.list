@@ -1,0 +1,17 @@
+# Emkay's skills, for the house (ovos_core installs these at start).
+# Made by tools/sync_profile.py from emkay-voice/emkay/main/requirements/browser.txt
+# – edit Emkay's list, not this one. Left out here: ovos-skill-guardian, ovos-skill-kiosk (browser-only).
+ovos-core[skills-essential,skills-internet,skills-audio]
+ovos-skill-calculator
+ovos-skill-geography
+ovos-skill-geometry
+ovos-skill-nato-alphabet
+ovos-skill-morse-code
+ovos-skill-icanhazdadjokes
+ovos-common-reading-pipeline-plugin
+ovos-skill-ovosblog
+ovos-skill-horoscope-readings
+ovos-media-provider-pyradios
+ovos-media-provider-news
+ovos-skill-about-emkay
+ovos-skill-store

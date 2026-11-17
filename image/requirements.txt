@@ -1,0 +1,9 @@
+# hivemind-core, at versions that start: hivemind-bus-client 0.4.4 and
+# hivemind-plugin-manager 0.5 still need bitstring<4.3 and pkg_resources
+# (setuptools<81). Lift these when HiveMind has moved on.
+hivemind-core==4.0.0
+bitstring<4.3
+setuptools<81
+
+# the page (tornado comes with hivemind-core)
+segno>=1.6

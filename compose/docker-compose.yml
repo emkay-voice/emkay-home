@@ -1,0 +1,111 @@
+# Emkay Home – the OpenVoiceOS for the house.
+#
+#   cd compose && cp .env.example .env && docker compose up -d
+#   (or: podman compose up -d)
+#
+# Then open http://<this machine>/ in a browser.
+#
+# OVOS is ovos-docker's own images (smartgic/ovos-*), as its "server"
+# compose runs them – no microphone or speaker in the house; the Emkays are
+# the ears and the voice. Emkay Home adds hivemind-core with the house page
+# (emkay_home) and Caddy in front, for one https address.
+# Everything uses the host's network, like ovos-docker.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-hardened: &hardened
+  init: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true", "label=disable"]
+
+volumes:
+  ovos_config:      # ~/.config/mycroft – mycroft.conf and skills.list (emkay_home seeds them)
+  ovos_share:       # ~/.local/share/mycroft
+  ovos_state:       # ~/.local/state/mycroft
+  ovos_nltk:
+  ovos_persona:
+  hivemind_data:    # the paired Emkays (hivemind-core's client database)
+  hivemind_config:
+  emkay_home_data:  # the house page's password and language
+  caddy_data:       # the house's certificate authority – keep it, or every device must trust a new one
+  caddy_config:
+
+services:
+  ovos_messagebus:
+    <<: *hardened
+    container_name: ovos_messagebus
+    image: docker.io/smartgic/ovos-messagebus:${OVOS_VERSION:-alpha}
+    restart: unless-stopped
+    network_mode: host
+    logging: *logging
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ovos_config:/home/ovos/.config/mycroft:ro
+      - ovos_state:/home/ovos/.local/state/mycroft
+    depends_on:
+      emkay_home:
+        condition: service_healthy
+
+  ovos_core:
+    <<: *hardened
+    container_name: ovos_core
+    image: docker.io/smartgic/ovos-core:${OVOS_VERSION:-alpha}
+    restart: unless-stopped
+    network_mode: host
+    logging: *logging
+    environment:
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ovos_config:/home/ovos/.config/mycroft
+      - ovos_persona:/home/ovos/.config/ovos_persona
+      - ovos_share:/home/ovos/.local/share/mycroft
+      - ovos_state:/home/ovos/.local/state/mycroft
+      - ovos_nltk:/home/ovos/nltk_data
+    depends_on:
+      ovos_messagebus:
+        condition: service_started
+
+  emkay_home:
+    <<: *hardened
+    container_name: emkay_home
+    image: ghcr.io/emkay-voice/emkay-home:${EMKAY_HOME_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: image/Dockerfile
+    restart: unless-stopped
+    network_mode: host
+    logging: *logging
+    environment:
+      TZ: ${TZ:-UTC}
+      HTTP_PORT: ${HTTP_PORT:-80}
+      HTTPS_PORT: ${HTTPS_PORT:-443}
+      EMKAY_URL: ${EMKAY_URL:-https://app.emkay.ai/}
+      EMKAY_HOME_NAMES: ${EMKAY_HOME_NAMES:-}
+    volumes:
+      - emkay_home_data:/data
+      - ovos_config:/ovos-config
+      - hivemind_data:/home/emkay/.local/share/hivemind-core
+      - hivemind_config:/home/emkay/.config/hivemind-core
+
+  caddy:
+    container_name: emkay_home_caddy
+    image: docker.io/library/caddy:2
+    restart: unless-stopped
+    network_mode: host
+    logging: *logging
+    cap_add: [NET_BIND_SERVICE]
+    environment:
+      HTTP_PORT: ${HTTP_PORT:-80}
+      HTTPS_PORT: ${HTTPS_PORT:-443}
+    volumes:
+      - ../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      emkay_home:
+        condition: service_healthy

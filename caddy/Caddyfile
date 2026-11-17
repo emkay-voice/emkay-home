@@ -1,0 +1,68 @@
+# Emkay Home: one address for the house.
+#
+#   https://<house>/            the house page (set up, "Add an Emkay")
+#   https://<house>/hivemind    hivemind-core (wss://) for the Emkays
+#   http://<house>/             the welcome page: trust the house's certificate
+#   http(s)://<house>/ca.crt    the house's certificate (the root of its own CA)
+#
+# The certificate comes from Caddy's own CA ("tls internal") – made here,
+# offline, never public. It is made on demand for whatever LAN address or
+# local name the house is opened by; emkay-home says which names are allowed
+# (only the house's own, never a public name).
+#
+# To use a certificate the house already has instead, see docs/certificates.md.
+{
+	admin off
+	http_port {$HTTP_PORT:80}
+	https_port {$HTTPS_PORT:443}
+	local_certs
+	skip_install_trust
+	on_demand_tls {
+		ask http://127.0.0.1:{$EMKAY_HOME_PORT:8099}/tls-ask
+	}
+	pki {
+		ca local {
+			name "Emkay Home"
+		}
+	}
+}
+
+# Only the root certificate – never anything else from Caddy's storage.
+(ca) {
+	handle /ca.crt {
+		root * /data/caddy/pki/authorities/local
+		rewrite * /root.crt
+		header Content-Type application/x-x509-ca-cert
+		header Content-Disposition "attachment; filename=\"emkay-home.crt\""
+		header Cache-Control no-store
+		file_server
+	}
+}
+
+(page) {
+	reverse_proxy 127.0.0.1:{$EMKAY_HOME_PORT:8099} {
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
+
+https:// {
+	tls internal {
+		on_demand
+	}
+	import ca
+
+	handle_path /hivemind* {
+		reverse_proxy 127.0.0.1:{$HIVEMIND_PORT:5678}
+	}
+
+	handle {
+		import page
+	}
+}
+
+http:// {
+	import ca
+	handle {
+		import page
+	}
+}
