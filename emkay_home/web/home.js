@@ -191,6 +191,52 @@ $("speech").onsubmit = async (e) => {
   setTimeout(() => speech(false), 500);
 };
 
+// --- Home Assistant: the house and its Emkays as devices there ----------------
+
+let haTimer = null;
+
+async function homeAssistant() {
+  clearTimeout(haTimer);
+  let s;
+  try { s = await api("/api/ha"); } catch { return; }
+  show("ha-connect", !s.connected);
+  show("ha-linked", s.connected);
+  if (!s.connected) return;
+  const key = { ready: "ha.connected", pending: "ha.pending" }[s.state] || "ha.connecting";
+  $("ha-state").textContent = t(key, { url: s.url });
+  $("ha-state").classList.toggle("ok", s.state === "ready");
+  if (s.state !== "ready") haTimer = setTimeout(homeAssistant, 4000);
+}
+
+$("ha-connect").onsubmit = async (e) => {
+  e.preventDefault();
+  show("ha-error", false);
+  const url = new FormData(e.target).get("url");
+  try {
+    const { go } = await api("/api/ha", { url });
+    location.href = go;           // Home Assistant's own login; back at /ha-auth
+  } catch {
+    $("ha-error").textContent = t("ha.err.unreachable", { url });
+    show("ha-error");
+  }
+};
+
+$("ha-disconnect").onclick = async () => {
+  await api("/api/ha/disconnect", {});
+  homeAssistant();
+};
+
+function haReturned() {
+  const result = new URLSearchParams(location.search).get("ha");
+  if (!result) return;
+  history.replaceState(null, "", "/");
+  if (result === "failed") {
+    $("ha-error").textContent = t("ha.failed");
+    show("ha-error");
+  }
+  $("ha-card").scrollIntoView({ behavior: "smooth" });
+}
+
 // --- language -----------------------------------------------------------------
 
 $("lang").onchange = async (e) => {
@@ -199,6 +245,7 @@ $("lang").onchange = async (e) => {
   apply();
   refresh();
   speech(false);
+  homeAssistant();
   show("lang-saved");
   setTimeout(() => show("lang-saved", false), 2000);
 };
@@ -230,8 +277,10 @@ async function start() {
     refresh();
     emkay();
     speech();
+    homeAssistant();
   }
   apply();
+  if (info.logged_in) haReturned();
 }
 
 start();

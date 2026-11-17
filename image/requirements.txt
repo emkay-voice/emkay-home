@@ -7,3 +7,7 @@ setuptools<81
 
 # the page (tornado comes with hivemind-core)
 segno>=1.6
+
+# the house and its Emkays in Home Assistant (emkay_home/ha.py); it brings
+# ovos-bus-client and ovos-plugin-manager
+ovos-phal-plugin-ha-link>=0.1.0a4

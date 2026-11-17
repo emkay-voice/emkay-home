@@ -7,13 +7,14 @@ import argparse
 import asyncio
 import logging
 
-from . import app, hive, house, panel, settings, site, speech
+from . import app, ha, hive, house, panel, settings, site, speech
 
 
 async def main(run_hivemind=True):
     logging.basicConfig(level=logging.INFO, format="%(asctime)s emkay-home %(levelname)s %(message)s")
     house.seed_ovos_profile()
     hive.write_server_config()
+    hive.allow_answers()
     panel.prepare()
     speech.apply(restart=False)
     app.make_app().listen(settings.LISTEN_PORT, settings.LISTEN_HOST)
@@ -21,6 +22,8 @@ async def main(run_hivemind=True):
     tasks = [asyncio.create_task(site.keep_updated())]
     if run_hivemind:
         tasks.append(asyncio.create_task(hive.keep_running()))
+    # the house in Home Assistant, if it has been connected (ha.py)
+    tasks.append(asyncio.create_task(ha.start()))
     await asyncio.Event().wait()
 
 
