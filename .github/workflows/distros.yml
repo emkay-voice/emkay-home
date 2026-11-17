@@ -91,9 +91,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build the machine
+        env:   # through the environment: prep may hold quotes
+          IMAGE: ${{ matrix.image }}
+          PREP: ${{ matrix.prep }}
+          INIT: ${{ matrix.init || '/sbin/init' }}
         run: |
-          init="${{ matrix.init || '/sbin/init' }}"
-          printf 'FROM %s\nRUN %s\nCMD ["%s"]\n' "${{ matrix.image }}" "${{ matrix.prep }}" "$init" > Machinefile
+          printf 'FROM %s\nRUN %s\nCMD ["%s"]\n' "$IMAGE" "$PREP" "$INIT" > Machinefile
           cat Machinefile
           docker build -q -t machine -f Machinefile .
 
