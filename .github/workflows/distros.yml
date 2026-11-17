@@ -111,7 +111,7 @@ jobs:
       # by the machine's own address, as a phone on the LAN would (through a
       # published port the house would see another address than was asked for)
       - name: Walk through the house
-        run: python3 tools/smoke.py "$(docker inspect -f '{{.NetworkSettings.IPAddress}}' machine)"
+        run: python3 tools/smoke.py "$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' machine)"
 
       - if: failure()
         name: What happened
