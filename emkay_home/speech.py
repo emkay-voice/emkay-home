@@ -126,7 +126,10 @@ def apply(restart=True):
     lang = house.load_state().get("lang") or "en-us"
     conf = {
         "lang": lang,
-        "stt": {"module": STT_PLUGIN, STT_PLUGIN: {"quantization": "int8", "lang2model": LANG2MODEL}},
+        # cpu_models_only: no 1B-parameter models, and the plugin's own
+        # fallback (loaded when it starts) is Whisper base, not Canary 1B
+        "stt": {"module": STT_PLUGIN, STT_PLUGIN: {"quantization": "int8", "cpu_models_only": True,
+                                                   "lang2model": LANG2MODEL}},
         "tts": {"module": "ovos-tts-plugin-piper", "ovos-tts-plugin-piper": {}},
     }
     d = settings.SPEECH_CONFIG

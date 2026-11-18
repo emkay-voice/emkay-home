@@ -32,10 +32,11 @@ RUN groupadd --gid 1000 ovos && useradd --uid 1000 --gid 1000 -m ovos \
  && mkdir -p /home/ovos/.config/mycroft /home/ovos/.cache /home/ovos/.local/share \
  && chown -R ovos:ovos /home/ovos
 
-# the alpha channel, as Emkay and the rest of the house follow it
+# the alpha channel, as Emkay and the rest of the house follow it;
+# onnx-asr[hub]: it fetches its models from Hugging Face
 ARG OVOS_RELEASES_REF=main
 RUN pip install --pre ovos-stt-http-server ovos-tts-server \
-      ovos-stt-plugin-onnx-asr ovos-tts-plugin-piper \
+      ovos-stt-plugin-onnx-asr "onnx-asr[hub]" ovos-tts-plugin-piper \
       -c "https://raw.githubusercontent.com/OpenVoiceOS/ovos-releases/${OVOS_RELEASES_REF}/constraints-alpha.txt"
 
 COPY speech/run.sh /opt/emkay/run.sh
