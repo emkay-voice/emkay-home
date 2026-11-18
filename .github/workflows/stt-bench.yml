@@ -1,0 +1,107 @@
+# How well and how fast speech recognition models hear Danish (tools/stt_bench.py),
+# to pick what the house uses for speech in Danish (#13). Run by hand
+# (Actions → Danish STT bench) or by a push to the stt-bench branch. The
+# result is in the run's summary.
+name: Danish STT bench
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [stt-bench]
+    paths: [tools/stt_bench.py, .github/workflows/stt-bench.yml]
+
+jobs:
+  clips:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # the house's own TTS server, in Danish
+      - name: Start Piper (emkay-home-speech)
+        run: |
+          mkdir -p /tmp/speech && echo 1 > /tmp/speech/in-the-house
+          echo '{"lang": "da-dk", "tts": {"ovos-tts-plugin-piper": {}}}' > /tmp/speech/mycroft.conf
+          chmod -R a+rX /tmp/speech
+          docker run -d --name tts --network host -v /tmp/speech:/home/ovos/.config/mycroft:ro \
+            ghcr.io/emkay-voice/emkay-home-speech:latest tts
+          for i in $(seq 120); do curl -sf http://127.0.0.1:8591/status >/dev/null && break; sleep 2; done
+      - name: Make the clips
+        run: python tools/stt_bench.py clips clips
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clips
+          path: clips
+
+  bench:
+    needs: clips
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        model:
+          - fw:small
+          - fw:medium
+          - fw:large-v3-turbo
+          - fw:edda
+          - w2v:CoRal-project/roest-v3-wav2vec2-315m
+          - w2vlm:CoRal-project/roest-v3-wav2vec2-315m
+          # OpenVoiceOS' own onnx-asr plugin: its Danish default (Parakeet v3,
+          # multilingual) and NVIDIA's Danish Parakeet
+          - onnx:nemo-parakeet-tdt-0.6b-v3
+          - onnx:OpenVoiceOS/nvidia-parakeet-rnnt-110m-da-dk-onnx
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@v4
+        with:
+          name: clips
+          path: clips
+      - name: Install
+        run: |
+          pip install -q faster-whisper soundfile
+          case "${{ matrix.model }}" in
+            w2v*|fw:edda) pip install -q torch --index-url https://download.pytorch.org/whl/cpu
+                          pip install -q transformers ctranslate2 ;;
+          esac
+          case "${{ matrix.model }}" in
+            w2vlm:*) pip install -q pyctcdecode https://github.com/kpu/kenlm/archive/master.zip ;;
+            onnx:*) pip install -q --pre ovos-stt-plugin-onnx-asr ;;
+          esac
+      # Edda v0.2 (Danish Foundation Models, Apache 2.0): whisper-large-v3-turbo
+      # fine-tuned on Danish – converted here to faster-whisper's format, as
+      # the house would run it
+      - name: Convert Edda
+        if: matrix.model == 'fw:edda'
+        run: |
+          for repo in danish-foundation-models/edda-v0.2 kstorm77/edda-v0.2; do
+            ct2-transformers-converter --model "$repo" --output_dir edda --quantization int8 \
+              --copy_files tokenizer.json preprocessor_config.json && echo "converted $repo" && break
+            rm -rf edda
+          done
+          du -sh edda
+      - name: Run
+        run: |
+          m="${{ matrix.model }}"; [ "$m" = fw:edda ] && m=fw:./edda
+          python tools/stt_bench.py run "$m" clips > result.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: result-${{ strategy.job-index }}
+          path: result.json
+
+  report:
+    needs: bench
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: result-*
+          path: results
+      - run: python3 tools/stt_bench.py report results/*/result.json | tee -a "$GITHUB_STEP_SUMMARY"
