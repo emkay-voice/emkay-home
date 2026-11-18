@@ -166,7 +166,15 @@ async function speech(fill = true) {
   let s;
   try { s = await api("/api/speech"); } catch { return; }
   const hw = s.hardware;
-  if (fill) for (const r of $("speech").elements.where) r.checked = r.value === s.where;
+  if (fill) {
+    for (const r of $("speech").elements.where) r.checked = r.value === s.where;
+    $("speech-voice").replaceChildren(...s.voices.map((v) => {
+      const o = new Option(v.name, v.id);
+      o.selected = v.id === s.voice;
+      return o;
+    }));
+    show("speech-voice-box", s.voices.length > 0);   // a language without Piper voices
+  }
   $("speech-hears").textContent = t("speech.hears", { model: s.hears });
   const where = t(s.suggested.where === "house" ? "speech.house" : "speech.phones").toLowerCase();
   $("speech-machine").textContent = t("speech.machine", { cores: hw.cores, mem: hw.mem_gb ?? "?", gpu: hw.gpu ? t("speech.gpu") : "" })
@@ -179,7 +187,7 @@ async function speech(fill = true) {
 $("speech").onsubmit = async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
-  await api("/api/speech", { where: f.get("where") });
+  await api("/api/speech", { where: f.get("where"), voice: f.get("voice") });
   show("speech-saved");
   setTimeout(() => show("speech-saved", false), 2000);
   setTimeout(() => speech(false), 500);

@@ -44,6 +44,54 @@ MODEL_NAMES = {
     "OpenVoiceOS/nvidia-parakeet-rnnt-110m-da-dk-onnx": "NVIDIA Parakeet, Danish",
 }
 
+#: The house's voice, when speech is in the house: one voice for the whole
+#: house, chosen on the house page. Until then Emkay's own choice for the
+#: language – the same voice the devices speak with themselves
+#: (emkay-voice/emkay, web/brains/hivemind-brain.js VOICES). Named here, as
+#: Piper's own default can be wrong (for Danish it picks a Norwegian voice).
+VOICES = {
+    "en-us": "en_US-lessac-medium", "en-gb": "en_GB-alba-medium", "da-dk": "da_DK-talesyntese-medium",
+    "de-de": "de_DE-thorsten-medium", "es-es": "es_ES-davefx-medium", "fr-fr": "fr_FR-siwis-medium",
+    "it-it": "it_IT-paola-medium", "nl-nl": "nl_NL-pim-medium", "pt-pt": "pt_PT-tugão-medium",
+    "pt-br": "pt_BR-faber-medium", "ca-es": "ca_ES-upc_ona-medium", "eu-es": "eu_ES-antton-medium",
+}
+
+
+def _piper_voices():
+    """Piper's own list of voices (voices.json of ovos-tts-plugin-piper),
+    without importing the plugin."""
+    import importlib.util
+    try:
+        spec = importlib.util.find_spec("ovos_tts_plugin_piper")
+        path = Path(next(iter(spec.submodule_search_locations))) / "voices.json"
+        return json.loads(path.read_text())
+    except Exception:  # noqa: BLE001 - then only the default voice is offered
+        return {}
+
+
+def voices(lang):
+    """The Piper voices for a language: [{"id", "name"}], the default first."""
+    lang = (lang or "en-us").lower()
+    code = lang.replace("-", "_")
+    out = []
+    for key, v in _piper_voices().items():
+        lc = v.get("language", {}).get("code", "").lower()
+        if lc == code:
+            out.append({"id": key, "name": f"{v.get('name', key)} ({v.get('quality', '')})".replace(" ()", "")})
+    default = VOICES.get(lang)
+    if default and default not in [v["id"] for v in out]:
+        out.insert(0, {"id": default, "name": default.split("-", 1)[-1]})
+    out.sort(key=lambda v: (v["id"] != default, v["name"]))
+    return out
+
+
+def voice_for(lang):
+    """The house's voice for a language: the one chosen on the house page,
+    else Emkay's own."""
+    lang = (lang or "en-us").lower()
+    chosen = ((house.load_state().get("speech") or {}).get("voices") or {}).get(lang)
+    return chosen or VOICES.get(lang)
+
 
 # --- the machine ----------------------------------------------------------------
 
@@ -99,19 +147,26 @@ def current():
     st = house.load_state()
     sp = st.get("speech") or {}
     hw = hardware()
+    lang = st.get("lang") or "en-us"
     return {"where": sp.get("where", "phones"), "suggested": preset(hw), "hardware": hw,
-            "hears": hears(st.get("lang"))}
+            "hears": hears(lang), "voice": voice_for(lang), "voices": voices(lang)}
 
 
-def choose(where, model=None):
-    """model: no longer chosen here (the plugin picks one per language); taken
-    and ignored, for older pages."""
+def choose(where, model=None, voice=None):
+    """where: phones (on the devices) or house; voice: the house's voice for
+    its language (a Piper voice id). model: no longer chosen here (the
+    plugin picks one per language); taken and ignored, for older pages."""
     if where not in ("phones", "house"):
         raise ValueError("where: phones or house")
     st = house.load_state()
+    lang = st.get("lang") or "en-us"
+    if voice and voice not in [v["id"] for v in voices(lang)]:
+        raise ValueError("not a voice for the house's language")
     sp = st.get("speech") or {}
     sp["where"] = where
     sp.pop("model", None)
+    if voice:
+        sp.setdefault("voices", {})[lang] = voice
     st["speech"] = sp
     house.save_state(st)
     apply()
@@ -122,7 +177,8 @@ def in_house():
 
 
 def apply(restart=True):
-    """The choice into the speech containers' config, and restart them."""
+    """The choice into the speech containers' config, and restart them – only
+    when something changed."""
     c = current()
     lang = house.load_state().get("lang") or "en-us"
     conf = {
@@ -131,13 +187,24 @@ def apply(restart=True):
         # fallback (loaded when it starts) is Whisper base, not Canary 1B
         "stt": {"module": STT_PLUGIN, STT_PLUGIN: {"quantization": "int8", "cpu_models_only": True,
                                                    "lang2model": LANG2MODEL}},
-        "tts": {"module": "ovos-tts-plugin-piper", "ovos-tts-plugin-piper": {}},
+        # the house's voice, for an Emkay that asks for none
+        "tts": {"module": "ovos-tts-plugin-piper", "ovos-tts-plugin-piper": {"voice": voice_for(lang)}},
     }
     d = settings.SPEECH_CONFIG
+    text = json.dumps(conf, indent=2)
+    flag = d / "in-the-house"
+    try:
+        same = (d / "mycroft.conf").read_text() == text and flag.exists() == (c["where"] == "house")
+    except OSError:
+        same = False
+    if same:
+        # nothing changed: no restart (it would cut off an Emkay mid-sentence)
+        if c["where"] == "house" and not _warm.is_set():
+            warm_up()
+        return
     try:
         d.mkdir(parents=True, exist_ok=True)
-        (d / "mycroft.conf").write_text(json.dumps(conf, indent=2))
-        flag = d / "in-the-house"
+        (d / "mycroft.conf").write_text(text)
         if c["where"] == "house":
             flag.write_text("1\n")
         else:
@@ -219,4 +286,8 @@ def for_emkay(host):
         return None
     port = "" if settings.HTTPS_PORT == 443 else f":{settings.HTTPS_PORT}"
     base = f"https://{host}{port}/speech"
-    return {"stt": f"{base}/stt/stt", "tts": f"{base}/tts", "auth": "hivemind-key"}
+    lang = house.load_state().get("lang") or "en-us"
+    # voice: the house's voice for its language – the Emkays speak with it,
+    # also when they speak themselves because the house can't answer
+    return {"stt": f"{base}/stt/stt", "tts": f"{base}/tts", "auth": "hivemind-key",
+            "lang": lang, "voice": voice_for(lang)}
