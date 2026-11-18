@@ -177,7 +177,8 @@ def in_house():
 
 
 def apply(restart=True):
-    """The choice into the speech containers' config, and restart them."""
+    """The choice into the speech containers' config, and restart them – only
+    when something changed."""
     c = current()
     lang = house.load_state().get("lang") or "en-us"
     conf = {
@@ -190,10 +191,20 @@ def apply(restart=True):
         "tts": {"module": "ovos-tts-plugin-piper", "ovos-tts-plugin-piper": {"voice": voice_for(lang)}},
     }
     d = settings.SPEECH_CONFIG
+    text = json.dumps(conf, indent=2)
+    flag = d / "in-the-house"
+    try:
+        same = (d / "mycroft.conf").read_text() == text and flag.exists() == (c["where"] == "house")
+    except OSError:
+        same = False
+    if same:
+        # nothing changed: no restart (it would cut off an Emkay mid-sentence)
+        if c["where"] == "house" and not _warm.is_set():
+            warm_up()
+        return
     try:
         d.mkdir(parents=True, exist_ok=True)
-        (d / "mycroft.conf").write_text(json.dumps(conf, indent=2))
-        flag = d / "in-the-house"
+        (d / "mycroft.conf").write_text(text)
         if c["where"] == "house":
             flag.write_text("1\n")
         else:
