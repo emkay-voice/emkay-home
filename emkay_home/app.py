@@ -229,7 +229,7 @@ class Lang(Base):
 
 
 class Speech(Base):
-    """Speech on the phones or in the house (speech.py)."""
+    """Speech on the devices or in the house (speech.py)."""
     def get(self):
         self.need_login()
         self.write({**speech.current(), **{"status": speech.status()}})

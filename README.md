@@ -1,33 +1,34 @@
 # Emkay Home
 
-**The OpenVoiceOS for the house** – the one your phones and tablets with
-[Emkay](https://emkay.ai) are satellites of. As easy as Emkay itself: open
+**The OpenVoiceOS for the house** – the one your Emkays – phones, tablets, PCs and TVs with
+[Emkay](https://emkay.ai) – are satellites of. As easy as Emkay itself: open
 the page, tap here and there, and you're up.
 
 > **Status: early alpha.** Docker compose with OVOS, hivemind-core and the
 > house page; "Add an Emkay" with a QR code; the house's own certificate;
-> Emkay itself served from the house; in all of Emkay's languages. The
-> install script and the Home Assistant add-on come next (see
-> [Roadmap](#roadmap)).
+> Emkay itself served from the house; speech in the house; the one-line
+> install script; in all of Emkay's languages. The Home Assistant add-on
+> comes next (see [Roadmap](#roadmap)).
 > Background and decisions: [emkay-voice/emkay#33](https://github.com/emkay-voice/emkay/issues/33).
 
 ## What it is
 
-Emkay runs OpenVoiceOS in the browser of a phone or tablet. With Emkay Home
-the questions go to an OpenVoiceOS in the house instead: the phone keeps the
+Emkay runs OpenVoiceOS in the browser of a device – a phone, tablet, PC or
+TV. With Emkay Home the questions go to an OpenVoiceOS in the house instead:
+the device keeps the
 face, the wake word, the microphone and the speaker; the house has the
 skills. Every Emkay in the house shares the same assistant.
 
 Setting that up used to be for nerds (`hivemind-core add-client` in a
-terminal, a key and a password typed on a phone, a TLS certificate). In
+terminal, a key and a password typed on the device, a TLS certificate). In
 Emkay Home:
 
 - Open its page → pick a language and a password → it's running.
-- **"Add an Emkay"** shows a QR code. Scan it with the phone → Emkay opens as
+- **"Add an Emkay"** shows a QR code. Scan it with the device → Emkay opens as
   a satellite of the house. Nobody sees the word HiveMind, a key or a
   password, and nothing goes by mail (a pairing link in a mail can end up in
-  someone's link scanner – the QR code goes straight from screen to phone).
-- A list of the paired Emkays (kitchen tablet, bedroom phone…), and a way to
+  someone's link scanner – the QR code goes straight from screen to device).
+- A list of the paired Emkays (kitchen tablet, bedroom phone, the living-room TV…), and a way to
   remove one.
 
 ## Get it
@@ -44,7 +45,7 @@ The installer ([`install/home.sh`](install/home.sh)) looks at the machine,
 installs Docker if it is missing (Debian, Ubuntu, Raspberry Pi OS, Fedora,
 CentOS/RHEL, Mint, Arch, openSUSE, Alpine), puts the setup in
 `/opt/emkay-home`, starts it, and ends with the address to open – and a QR
-code for the phone. Quietly: one line per step on the screen, everything
+code to scan. Quietly: one line per step on the screen, everything
 else in `/tmp/emkay-home-install.log`. In Emkay's languages, after `$LANG`
 (or `--lang da`). Running it again updates; `… | bash -s -- --uninstall`
 removes it (and asks before deleting any data). In an LXC container, turn on
@@ -61,7 +62,7 @@ emkay-home restart | start | stop
 emkay-home uninstall
 ```
 
-A new phone doesn't need the terminal: open the house's address and tap
+A new Emkay doesn't need the terminal: open the house's address and tap
 **Add an Emkay**.
 
 By hand, with Docker already there:
@@ -73,14 +74,14 @@ cp .env.example .env        # time zone, ports
 docker compose up -d
 ```
 
-Then open `http://<that machine>/` on a phone or PC on the same network and
+Then open `http://<that machine>/` on a phone, tablet or PC on the same network and
 follow the page. The first start takes a few minutes while OpenVoiceOS
 installs its skills.
 
 ## How it fits together
 
 ```
-phone / tablet with Emkay                       the house (docker compose, host network)
+a device with Emkay                             the house (docker compose, host network)
  ┌───────────────────────┐                      ┌───────────────────────────────────────────┐
  │ face, wake word, mic, │  https://<house>/    │ Caddy ── /          → emkay_home (the page)│
  │ speech, voice         │ ───────────────────► │      └─ /hivemind   → hivemind-core ─┐     │
@@ -119,11 +120,11 @@ Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
 1. On the house page (https, behind its password) "Add an Emkay" makes a
    one-time code, valid for 10 minutes, and shows it as a QR code:
    `http://<house>/#t=<code>`.
-2. The phone opens the **welcome page** (plain http – the phone may not trust
+2. The device opens the **welcome page** (plain http – it may not trust
    the house yet). The code is in the address' fragment, which a browser
    never sends, so it doesn't cross the network in the clear.
-3. The welcome page checks whether the phone trusts the house's certificate.
-   If not, it offers the certificate and a short guide for the phone's system;
+3. The welcome page checks whether the device trusts the house's certificate.
+   If not, it offers the certificate and a short guide for the device's system;
    if so, it goes straight on to `https://<house>/pair#t=<code>`.
 4. That page trades the code (once) for a new hivemind-core client of its
    own and opens Emkay – from the house, `https://<house>/emkay/` – with the
@@ -134,7 +135,7 @@ Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
 ### The control panel
 
 The OVOS in the house is looked after with OpenVoiceOS' own control panel, in
-Emkay's colours as on the phone ([`panel/emkay_panel.py`](panel/emkay_panel.py)) –
+Emkay's colours as in Emkay itself ([`panel/emkay_panel.py`](panel/emkay_panel.py)) –
 skills and plugins, settings, logs, the message bus – at
 `https://<house>:8500/` ("Control panel" on the house page). It sits behind
 the house page's sign-in: Caddy asks `emkay_home` first (`forward_auth`), and
@@ -144,11 +145,11 @@ isn't signed in is sent to the house page and back. The panel edits the same
 `mycroft.conf` as `ovos_core` and asks ovos-core to install skills, so they
 land where they run. `PANEL_PORT` in `.env` moves it.
 
-### Speech: on the phones, or in the house
+### Speech: on the devices, or in the house
 
 Every Emkay can hear and speak by itself, in the browser – that works
 everywhere. On a strong machine the house can do it for all of them instead,
-better and faster than a phone: "Speech" on the house page, *on the phones*
+better and faster than a phone or tablet: "Speech" on the house page, *on the devices*
 or *in the house*. The house looks at the machine (cores, memory) and
 suggests which. Nobody picks plugins or models.
 
@@ -172,22 +173,22 @@ with how long each took.
 
 ### Emkay, served from the house
 
-The phones load Emkay itself from the house too, not from the internet
+The Emkays load Emkay itself from the house too, not from the internet
 ([emkay#30](https://github.com/emkay-voice/emkay/issues/30)). Emkay is a
 static site, and every deploy of app.emkay.ai is also published as one
 download (the release [`site`](https://github.com/emkay-voice/emkay/releases/tag/site)).
 `emkay_home` fetches it on the first start and then once a day when there is
 a newer build (checked against its sha256, switched in one step), and Caddy
 serves it at `/emkay/`. The house page shows which build it serves, with
-"Look for a newer one". Until it has been fetched, a paired phone opens
+"Look for a newer one". Until it has been fetched, a paired device opens
 app.emkay.ai, which talks to the house the same way. `EMKAY_URL` in `.env`
-can point the phones at another Emkay instead.
+can point the Emkays at another Emkay instead.
 
 ### Languages
 
 Emkay Home speaks Emkay's languages – English, Danish, German, Spanish,
 Catalan, Galician, Basque, French, Italian, Dutch and Portuguese (Portugal
-and Brazil) – with Emkay's words for things, so the house page and the phones
+and Brazil) – with Emkay's words for things, so the house page and the Emkays
 read alike. The texts are in [`emkay_home/locale/`](emkay_home/locale), one
 `.dialog` file per text like an OVOS skill (and like Emkay), so OVOS'
 translation tooling can read them. The page follows the house's language,
@@ -226,7 +227,7 @@ before – and nothing that makes the house do anything.
 ## Certificates
 
 A browser gives a page the microphone only over https, and an https page may
-only open `wss://` – so the phone has to trust the house. Emkay Home makes
+only open `wss://` – so the device has to trust the house. Emkay Home makes
 **its own certificate authority** (Caddy's `tls internal`): offline, private,
 nothing leaves the house. It is installed once on each phone, tablet and PC –
 the welcome page helps. An accepted "not secure" warning is not enough: the

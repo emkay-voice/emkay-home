@@ -12,7 +12,7 @@ app.py: their HiveMind key).
 Which model hears which language is the plugin's choice (its per-language
 registry), except where the house knows better (LANG2MODEL, from
 docs/danish-speech.md). The choice on the house page is one line: on the
-phones or in the house; the house suggests which from the machine. Written
+devices or in the house; the house suggests which from the machine. Written
 to the speech containers' own config (the emkay_home_speech volume, their
 ~/.config/mycroft), and they are restarted to pick it up – the house's OVOS
 config is left alone.
@@ -218,7 +218,7 @@ def apply(restart=True):
             house.request_restart(name)
     if c["where"] == "house":
         warm_up()
-    LOG.info("speech %s", f"in the house ({c['hears']} for {lang})" if c["where"] == "house" else "on the phones")
+    LOG.info("speech %s", f"in the house ({c['hears']} for {lang})" if c["where"] == "house" else "on the devices")
 
 
 def lang_changed():
@@ -268,7 +268,7 @@ def warm_up():
 
 
 def status():
-    """off (on the phones) / starting (loading or downloading the models –
+    """off (on the devices) / starting (loading or downloading the models –
     the first time a few minutes) / ready."""
     if not in_house():
         return {"state": "off"}
