@@ -88,7 +88,10 @@ class Base(tornado.web.RequestHandler):
         self.set_header("Content-Type", "text/html; charset=utf-8")
         self.set_header("Content-Security-Policy",
                         "default-src 'self'; img-src 'self' data:; style-src 'self'; "
-                        "connect-src 'self' https:; frame-ancestors 'none'")
+                        "connect-src 'self' https:; "
+                        # the house's own Emkay may show this page (signing in on the
+                        # way to the control panel, inside Emkay) – nobody else
+                        f"frame-ancestors 'self' https://{self.request.host_name}:*")
         self.write((WEB / name).read_bytes())
 
 
@@ -135,7 +138,12 @@ class PanelAuth(Base):
             self.set_status(200)
             return
         port = "" if settings.HTTPS_PORT == 443 else f":{settings.HTTPS_PORT}"
-        self.redirect(f"https://{self.request.host_name}{port}/?next=panel")
+        # where the browser was going on the panel, so it gets there after
+        # signing in (a path only)
+        uri = self.request.headers.get("X-Forwarded-Uri", "/")
+        uri = uri if uri.startswith("/") and not uri.startswith("//") else "/"
+        q = tornado.escape.url_escape(uri, plus=False)
+        self.redirect(f"https://{self.request.host_name}{port}/?next=panel&uri={q}")
 
 
 class Ping(Base):

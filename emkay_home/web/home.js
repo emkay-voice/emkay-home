@@ -262,9 +262,12 @@ async function start() {
     $("ca-fp").textContent = info.ca ? `SHA-256 ${info.ca.sha256}` : "";
     $("panel-open").href = `https://${location.hostname}:${info.panel_port}/`;
     // signed in on the way to the control panel: on to it
-    if (new URLSearchParams(location.search).get("next") === "panel") {
+    const q = new URLSearchParams(location.search);
+    if (q.get("next") === "panel") {
       history.replaceState(null, "", "/");
-      location.href = $("panel-open").href;
+      // back to where on the panel the browser was going (a path there only)
+      const uri = q.get("uri") || "/";
+      location.href = $("panel-open").href.replace(/\/$/, "") + (/^\/(?!\/)/.test(uri) ? uri : "/");
       return;
     }
     show("house");
