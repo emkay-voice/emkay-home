@@ -120,7 +120,7 @@ en|un_done|Emkay Home is removed.
 en|un_kept|Its data is kept – installing again picks it up.
 en|status_up|Emkay Home is running (%s of %s services).
 en|status_down|Emkay Home isn’t running (%s of %s services) – start it with: emkay-home start
-en|add_hint|A new phone: open the address and tap “Add an Emkay”.
+en|add_hint|A new device: open the address and tap “Add an Emkay”.
 en|cmds|More: emkay-home update · logs · restart · uninstall
 en|later|Run emkay-home to see this again.
 da|tagline|OpenVoiceOS til dit hus
@@ -158,7 +158,7 @@ da|un_done|Emkay Home er fjernet.
 da|un_kept|Dataene er gemt – en ny installation tager dem med.
 da|status_up|Emkay Home kører (%s af %s tjenester).
 da|status_down|Emkay Home kører ikke (%s af %s tjenester) – start det med: emkay-home start
-da|add_hint|En ny telefon: åbn adressen, og tryk på “Tilføj en Emkay”.
+da|add_hint|En ny enhed: åbn adressen, og tryk på “Tilføj en Emkay”.
 da|cmds|Mere: emkay-home update · logs · restart · uninstall
 da|later|Kør emkay-home for at se dette igen.
 de|tagline|Das OpenVoiceOS für dein Haus
@@ -196,7 +196,7 @@ de|un_done|Emkay Home ist entfernt.
 de|un_kept|Die Daten bleiben – eine neue Installation übernimmt sie.
 de|status_up|Emkay Home läuft (%s von %s Diensten).
 de|status_down|Emkay Home läuft nicht (%s von %s Diensten) – starte es mit: emkay-home start
-de|add_hint|Ein neues Handy: Adresse öffnen und auf „Ein Emkay hinzufügen“ tippen.
+de|add_hint|Ein neues Gerät: Adresse öffnen und auf „Ein Emkay hinzufügen“ tippen.
 de|cmds|Mehr: emkay-home update · logs · restart · uninstall
 de|later|Mit emkay-home siehst du das hier wieder.
 es|tagline|El OpenVoiceOS para tu casa
@@ -234,7 +234,7 @@ es|un_done|Emkay Home se ha quitado.
 es|un_kept|Los datos se conservan – una nueva instalación los recupera.
 es|status_up|Emkay Home está en marcha (%s de %s servicios).
 es|status_down|Emkay Home no está en marcha (%s de %s servicios) – arráncalo con: emkay-home start
-es|add_hint|Un teléfono nuevo: abre la dirección y toca «Añadir un Emkay».
+es|add_hint|Un dispositivo nuevo: abre la dirección y toca «Añadir un Emkay».
 es|cmds|Más: emkay-home update · logs · restart · uninstall
 es|later|Ejecuta emkay-home para ver esto de nuevo.
 ca|tagline|L’OpenVoiceOS per a casa teva
@@ -272,7 +272,7 @@ ca|un_done|Emkay Home s’ha eliminat.
 ca|un_kept|Les dades es conserven – una nova instal·lació les recupera.
 ca|status_up|Emkay Home funciona (%s de %s serveis).
 ca|status_down|Emkay Home no funciona (%s de %s serveis) – engega’l amb: emkay-home start
-ca|add_hint|Un telèfon nou: obre l’adreça i toca «Afegeix un Emkay».
+ca|add_hint|Un dispositiu nou: obre l’adreça i toca «Afegeix un Emkay».
 ca|cmds|Més: emkay-home update · logs · restart · uninstall
 ca|later|Executa emkay-home per tornar a veure això.
 gl|tagline|O OpenVoiceOS para a túa casa
@@ -310,7 +310,7 @@ gl|un_done|Emkay Home quitouse.
 gl|un_kept|Os datos consérvanse – unha nova instalación recupéraos.
 gl|status_up|Emkay Home está en marcha (%s de %s servizos).
 gl|status_down|Emkay Home non está en marcha (%s de %s servizos) – iníciao con: emkay-home start
-gl|add_hint|Un teléfono novo: abre o enderezo e toca «Engadir un Emkay».
+gl|add_hint|Un dispositivo novo: abre o enderezo e toca «Engadir un Emkay».
 gl|cmds|Máis: emkay-home update · logs · restart · uninstall
 gl|later|Executa emkay-home para ver isto de novo.
 eu|tagline|Zure etxerako OpenVoiceOS-a
@@ -348,7 +348,7 @@ eu|un_done|Emkay Home kendu da.
 eu|un_kept|Datuak gordetzen dira – instalazio berri batek berreskuratzen ditu.
 eu|status_up|Emkay Home martxan dago (%s/%s zerbitzu).
 eu|status_down|Emkay Home ez dago martxan (%s/%s zerbitzu) – abiarazi honela: emkay-home start
-eu|add_hint|Telefono berri bat: ireki helbidea eta sakatu «Gehitu Emkay bat».
+eu|add_hint|Gailu berri bat: ireki helbidea eta sakatu «Gehitu Emkay bat».
 eu|cmds|Gehiago: emkay-home update · logs · restart · uninstall
 eu|later|Exekutatu emkay-home hau berriro ikusteko.
 fr|tagline|L’OpenVoiceOS pour votre maison
@@ -386,7 +386,7 @@ fr|un_done|Emkay Home est supprimé.
 fr|un_kept|Les données sont gardées – une nouvelle installation les reprend.
 fr|status_up|Emkay Home fonctionne (%s services sur %s).
 fr|status_down|Emkay Home ne fonctionne pas (%s services sur %s) – démarrez-le avec : emkay-home start
-fr|add_hint|Un nouveau téléphone : ouvrez l’adresse et touchez « Ajouter un Emkay ».
+fr|add_hint|Un nouvel appareil : ouvrez l’adresse et touchez « Ajouter un Emkay ».
 fr|cmds|Plus : emkay-home update · logs · restart · uninstall
 fr|later|Lancez emkay-home pour revoir ceci.
 it|tagline|L’OpenVoiceOS per la tua casa
@@ -424,7 +424,7 @@ it|un_done|Emkay Home è stato rimosso.
 it|un_kept|I dati restano – una nuova installazione li riprende.
 it|status_up|Emkay Home è in funzione (%s servizi su %s).
 it|status_down|Emkay Home non è in funzione (%s servizi su %s) – avvialo con: emkay-home start
-it|add_hint|Un nuovo telefono: apri l’indirizzo e tocca «Aggiungi un Emkay».
+it|add_hint|Un nuovo dispositivo: apri l’indirizzo e tocca «Aggiungi un Emkay».
 it|cmds|Altro: emkay-home update · logs · restart · uninstall
 it|later|Esegui emkay-home per rivedere questo.
 nl|tagline|Het OpenVoiceOS voor je huis
@@ -462,7 +462,7 @@ nl|un_done|Emkay Home is verwijderd.
 nl|un_kept|De gegevens blijven – een nieuwe installatie neemt ze mee.
 nl|status_up|Emkay Home draait (%s van %s diensten).
 nl|status_down|Emkay Home draait niet (%s van %s diensten) – start het met: emkay-home start
-nl|add_hint|Een nieuwe telefoon: open het adres en tik op ‘Een Emkay toevoegen’.
+nl|add_hint|Een nieuw apparaat: open het adres en tik op ‘Een Emkay toevoegen’.
 nl|cmds|Meer: emkay-home update · logs · restart · uninstall
 nl|later|Voer emkay-home uit om dit opnieuw te zien.
 pt|tagline|O OpenVoiceOS para a sua casa
@@ -500,7 +500,7 @@ pt|un_done|O Emkay Home foi removido.
 pt|un_kept|Os dados ficam guardados – uma nova instalação recupera-os.
 pt|status_up|O Emkay Home está a funcionar (%s de %s serviços).
 pt|status_down|O Emkay Home não está a funcionar (%s de %s serviços) – inicie-o com: emkay-home start
-pt|add_hint|Um telemóvel novo: abra o endereço e toque em “Adicionar um Emkay”.
+pt|add_hint|Um dispositivo novo: abra o endereço e toque em “Adicionar um Emkay”.
 pt|cmds|Mais: emkay-home update · logs · restart · uninstall
 pt|later|Execute emkay-home para ver isto de novo.
 pt-br|check|Olhando esta máquina
@@ -528,7 +528,7 @@ pt-br|un_ask|Apagar também os dados da casa – os Emkays pareados e o certific
 pt-br|un_kept|Os dados ficam guardados – uma nova instalação os recupera.
 pt-br|status_up|O Emkay Home está funcionando (%s de %s serviços).
 pt-br|status_down|O Emkay Home não está funcionando (%s de %s serviços) – inicie com: emkay-home start
-pt-br|add_hint|Um celular novo: abra o endereço e toque em “Adicionar um Emkay”.
+pt-br|add_hint|Um dispositivo novo: abra o endereço e toque em “Adicionar um Emkay”.
 pt-br|later|Execute emkay-home para ver isto de novo.
 '
 

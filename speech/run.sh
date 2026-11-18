@@ -14,7 +14,7 @@ what="${1:-stt}"
 conf="$HOME/.config/mycroft"
 
 if [ ! -f "$conf/in-the-house" ]; then
-  echo "speech is on the phones – $what waits here until the house page says otherwise"
+  echo "speech is on the devices – $what waits here until the house page says otherwise"
   trap 'exit 0' TERM INT
   while :; do sleep 3600 & wait $!; done
 fi

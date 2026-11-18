@@ -157,7 +157,7 @@ $("emkay-update").onclick = async () => {
   setTimeout(emkay, 300);
 };
 
-// --- speech: on the phones, or in the house ------------------------------------
+// --- speech: on the devices, or in the house -----------------------------------
 
 let speechTimer = null;
 
