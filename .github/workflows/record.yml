@@ -1,0 +1,40 @@
+# A recording of the installer, the way a person sees it – for the start
+# page on emkay.ai (home/), where asciinema's player shows it. Run by hand
+# (Actions → Record the installer) or by a push to the record branch; the
+# recordings (asciinema .cast, one per language) are the run's artifact.
+#
+# A fresh runner has Docker but no Emkay Home, so this is a first install.
+# Long waits (pulling the images) are cut to two seconds (--idle-time-limit),
+# so it shows what happens, not how long a download takes.
+name: Record the installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [record]
+    paths: [.github/workflows/record.yml, install/home.sh]
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lang: [en, da]
+    steps:
+      - uses: actions/checkout@v4
+      - name: asciinema
+        run: pipx install asciinema
+      - name: Record
+        env:
+          TERM: xterm-256color
+        run: |
+          asciinema rec --overwrite --quiet --idle-time-limit 2 --cols 92 --rows 40 \
+            --title "Emkay Home – install" \
+            -c "bash install/home.sh --lang ${{ matrix.lang }}" "install-${{ matrix.lang }}.cast"
+          ls -la install-*.cast
+          tail -c 600 "install-${{ matrix.lang }}.cast"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: install-${{ matrix.lang }}
+          path: install-${{ matrix.lang }}.cast
