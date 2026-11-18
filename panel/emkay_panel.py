@@ -9,6 +9,13 @@ colour tokens change; its pages, routes and CSS are untouched, and its
 Content-Security-Policy already allows inline styles.
 
 When Emkay's theme changes, change THEME here too.
+
+One more thing: the panel may be shown inside an Emkay of this house. On its
+own Emkay shows its panel over the face, with a close button; as a satellite
+of the house it shows the house's panel the same way, so it looks and works
+the same. The panel says frame-ancestors 'none'; here that becomes the
+house's own host, any port (Emkay is served from the house at /emkay/) –
+nobody else may frame it.
 """
 import ovos_webui.service as service
 
@@ -35,8 +42,27 @@ main h2:has(+ .card #wake-test), main .card:has(#wake-test) { display: none !imp
 </style>"""
 
 
+def framers(host):
+    """Who may show the panel in a frame: this house's own pages, any port."""
+    name = host.decode("latin-1").strip()
+    name = name[: name.index("]") + 1] if name.startswith("[") else name.split(":")[0]
+    return f"frame-ancestors 'self' https://{name}:*".encode() if name else b"frame-ancestors 'self'"
+
+
+def allow_framing(headers, host):
+    out = []
+    for k, v in headers:
+        if k.lower() == b"x-frame-options":
+            continue   # frame-ancestors below says it, and says who
+        if k.lower() == b"content-security-policy" and b"frame-ancestors 'none'" in v:
+            v = v.replace(b"frame-ancestors 'none'", framers(host))
+        out.append((k, v))
+    return out
+
+
 class EmkayTheme:
-    """ASGI middleware: THEME into text/html responses, nothing else."""
+    """ASGI middleware: THEME into text/html responses, and the house's own
+    Emkays allowed to show the panel in a frame."""
 
     def __init__(self, app):
         self.app = app
@@ -45,11 +71,13 @@ class EmkayTheme:
         if scope["type"] != "http":
             return await self.app(scope, receive, send)
         start, chunks = None, []
+        host = dict(scope.get("headers") or []).get(b"host", b"")
 
         async def wrapped(message):
             nonlocal start
             if message["type"] == "http.response.start":
-                headers = dict(message.get("headers") or [])
+                message = {**message, "headers": allow_framing(message.get("headers") or [], host)}
+                headers = dict(message["headers"])
                 if b"text/html" in headers.get(b"content-type", b""):
                     start = message          # held until the whole page is here
                     return
