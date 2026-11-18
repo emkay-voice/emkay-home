@@ -1,7 +1,8 @@
 # emkay-home-speech: speech in the house, for the Emkays that want it – the
 # stock OpenVoiceOS speech servers with the house's plugins:
 #
-#   stt   ovos-stt-server  + ovos-stt-plugin-fasterwhisper (Whisper)
+#   stt   ovos-stt-server  + ovos-stt-plugin-onnx-asr (a model per language;
+#         NVIDIA's Danish Parakeet for Danish – docs/danish-speech.md)
 #   tts   ovos-tts-server  + ovos-tts-plugin-piper (Piper voices)
 #
 # One image, two containers (compose: emkay_home_stt, emkay_home_tts). Each
@@ -14,7 +15,7 @@ ARG PYTHON_IMAGE=docker.io/library/python:3.12-slim
 FROM ${PYTHON_IMAGE}
 
 LABEL org.opencontainers.image.title="Emkay Home – speech" \
-      org.opencontainers.image.description="OpenVoiceOS' STT and TTS servers (Whisper, Piper) for the Emkays of the house" \
+      org.opencontainers.image.description="OpenVoiceOS' STT and TTS servers (onnx-asr, Piper) for the Emkays of the house" \
       org.opencontainers.image.source="https://github.com/emkay-voice/emkay-home" \
       org.opencontainers.image.url="https://emkay.ai" \
       org.opencontainers.image.licenses="Apache-2.0"
@@ -31,10 +32,11 @@ RUN groupadd --gid 1000 ovos && useradd --uid 1000 --gid 1000 -m ovos \
  && mkdir -p /home/ovos/.config/mycroft /home/ovos/.cache /home/ovos/.local/share \
  && chown -R ovos:ovos /home/ovos
 
-# the alpha channel, as Emkay and the rest of the house follow it
+# the alpha channel, as Emkay and the rest of the house follow it;
+# onnx-asr[hub]: it fetches its models from Hugging Face
 ARG OVOS_RELEASES_REF=main
 RUN pip install --pre ovos-stt-http-server ovos-tts-server \
-      ovos-stt-plugin-fasterwhisper ovos-tts-plugin-piper \
+      ovos-stt-plugin-onnx-asr "onnx-asr[hub]" ovos-tts-plugin-piper \
       -c "https://raw.githubusercontent.com/OpenVoiceOS/ovos-releases/${OVOS_RELEASES_REF}/constraints-alpha.txt"
 
 COPY speech/run.sh /opt/emkay/run.sh

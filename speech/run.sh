@@ -4,7 +4,7 @@
 # plugins' settings to ~/.config/mycroft here (the emkay_home_speech volume)
 # and asks for this container to be restarted when they change.
 #
-#   run.sh stt    ovos-stt-server, Whisper, on 127.0.0.1:${STT_PORT:-8590}
+#   run.sh stt    ovos-stt-server, onnx-asr, on 127.0.0.1:${STT_PORT:-8590}
 #   run.sh tts    ovos-tts-server, Piper,   on 127.0.0.1:${TTS_PORT:-8591}
 #
 # Both listen on localhost only: Caddy is the way in (/speech/…), and lets
@@ -19,12 +19,15 @@ if [ ! -f "$conf/in-the-house" ]; then
   while :; do sleep 3600 & wait $!; done
 fi
 
-lang="$(python -c "import json; print(json.load(open('$conf/mycroft.conf')).get('lang', 'en-us'))" 2>/dev/null || echo en-us)"
+# the language, and the plugin for stt / tts, from the config emkay_home wrote
+read -r lang stt tts < <(python -c "
+import json; c = json.load(open('$conf/mycroft.conf'))
+print(c.get('lang', 'en-us'), c['stt'].get('module', 'ovos-stt-plugin-onnx-asr'),
+      c['tts'].get('module', 'ovos-tts-plugin-piper'))" 2>/dev/null || echo "en-us ovos-stt-plugin-onnx-asr ovos-tts-plugin-piper")
 
 case "$what" in
-  stt) exec ovos-stt-server --engine ovos-stt-plugin-fasterwhisper \
-         --host 127.0.0.1 --port "${STT_PORT:-8590}" ;;
-  tts) exec ovos-tts-server --engine ovos-tts-plugin-piper --lang "$lang" \
+  stt) exec ovos-stt-server --engine "$stt" --host 127.0.0.1 --port "${STT_PORT:-8590}" ;;
+  tts) exec ovos-tts-server --engine "$tts" --lang "$lang" \
          --host 127.0.0.1 --port "${TTS_PORT:-8591}" ;;
   *)   echo "run.sh: stt or tts, not $what" >&2; exit 2 ;;
 esac

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Speech in the house, tried out the way an Emkay would use it: turn it on
-on the house page, wait for Whisper and Piper, then – as the paired Emkay
+on the house page, wait for it to hear and speak, then – as the paired Emkay
 from tools/smoke.py – have the house say something and hear it back.
 
-    python tools/speak.py 192.168.1.10 pairing.json            # en-us, Whisper tiny
-    python tools/speak.py 192.168.1.10 pairing.json --model small --say "hvad er klokken" --lang da-dk
+    python tools/speak.py 192.168.1.10 pairing.json            # en-us
+    python tools/speak.py 192.168.1.10 pairing.json --lang da-dk --voice da_DK-talesyntese-medium \
+        --say "hvad er klokken" --expect klokken
 
 Prints how long the house took to speak and to hear. Standard library only.
 """
@@ -26,7 +27,6 @@ def main():
     p.add_argument("pairing", help="what tools/smoke.py printed")
     p.add_argument("--https", type=int, default=443)
     p.add_argument("--password", default="emkay-smoke")
-    p.add_argument("--model", default="tiny")
     p.add_argument("--lang", default="en-us")
     p.add_argument("--say", default="what time is it")
     p.add_argument("--voice", default="en_US-lessac-medium",
@@ -56,9 +56,9 @@ def main():
 
     step("log in, speech in the house")
     api("/api/login", {"password": a.password})
-    api("/api/speech", {"where": "house", "model": a.model})
+    api("/api/speech", {"where": "house"})
 
-    step(f"wait for Whisper ({a.model}) and Piper")
+    step("wait for the house to hear and speak")
     t0 = time.time()
     while True:
         s = api("/api/speech")
@@ -67,7 +67,7 @@ def main():
         if time.time() - t0 > a.timeout:
             raise SystemExit(f"speech never got ready: {s['status']}")
         time.sleep(5)
-    step(f"  ready after {time.time() - t0:.0f} s – {s['hardware']}")
+    step(f"  ready after {time.time() - t0:.0f} s – hears with {s['hears']} – {s['hardware']}")
 
     step("the Emkay asks the house where speech is")
     with phone.open(urllib.request.Request(base + "/api/house-info", headers=key), timeout=15) as r:
@@ -96,13 +96,14 @@ def main():
     body = json.dumps({"audio_b64": base64.b64encode(wav).decode(), "lang": a.lang}).encode()
     req = urllib.request.Request(info["stt"] + "/json", data=body,
                                  headers={**key, "Content-Type": "application/json"})
-    with phone.open(req, timeout=120) as r:
+    # the first time a language is heard its model is downloaded
+    with phone.open(req, timeout=900) as r:
         heard = json.loads(r.read())
     t_stt = time.time() - t2
     step(f"  heard “{heard['text']}”")
     assert a.expect.lower() in heard["text"].lower(), heard
 
-    print(json.dumps({"model": a.model, "said": a.say, "heard": heard["text"],
+    print(json.dumps({"model": s["hears"], "lang": a.lang, "said": a.say, "heard": heard["text"],
                       "tts_seconds": round(t_tts, 2), "stt_seconds": round(t_stt, 2),
                       "hardware": s["hardware"]}))
 
