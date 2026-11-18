@@ -14,8 +14,9 @@ each model loads up to a few GB.
 
 MODEL is fw:<name or dir> (faster-whisper, int8 on CPU – what the house's
 ovos-stt-plugin-fasterwhisper runs), w2v:<huggingface id> (a wav2vec2 CTC
-model, as Røst; transformers on CPU) or w2vlm:<id> (the same with its own
-language model, KenLM).
+model, as Røst; transformers on CPU) w2vlm:<id> (the same with its own
+language model, KenLM) or onnx:<model> (OpenVoiceOS' ovos-stt-plugin-onnx-asr,
+no torch).
 """
 import json
 import os
@@ -126,6 +127,19 @@ def load(model):
             with torch.inference_mode():
                 ids = m(**x).logits.argmax(-1)
             return tok.batch_decode(ids)[0].strip()
+        return hear
+    if kind == "onnx":
+        # OpenVoiceOS' own ovos-stt-plugin-onnx-asr, as the house would run
+        # it (no torch): a model it knows or a Hugging Face repo id
+        import numpy as np
+        from ovos_plugin_manager.utils.audio import AudioData
+        from ovos_stt_plugin_onnxasr import OnnxASR
+        stt = OnnxASR(config={"model": name, "quantization": "int8", "lang": "da-dk"})
+
+        def hear(audio):
+            pcm = (np.clip(audio, -1, 1) * 32767).astype(np.int16).tobytes()
+            return (stt.execute(AudioData(pcm, 16000, 2), "da-dk") or "").strip()
+        hear(np.zeros(16000, np.float32))   # load it now, not in the first clip
         return hear
     if kind == "w2vlm":
         # the same, with the model's own language model (CoRal's KenLM) –

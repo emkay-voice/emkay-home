@@ -48,6 +48,10 @@ jobs:
           - fw:edda
           - w2v:CoRal-project/roest-v3-wav2vec2-315m
           - w2vlm:CoRal-project/roest-v3-wav2vec2-315m
+          # OpenVoiceOS' own onnx-asr plugin: its Danish default (Parakeet v3,
+          # multilingual) and NVIDIA's Danish Parakeet
+          - onnx:nemo-parakeet-tdt-0.6b-v3
+          - onnx:OpenVoiceOS/nvidia-parakeet-rnnt-110m-da-dk-onnx
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -66,6 +70,7 @@ jobs:
           esac
           case "${{ matrix.model }}" in
             w2vlm:*) pip install -q pyctcdecode https://github.com/kpu/kenlm/archive/master.zip ;;
+            onnx:*) pip install -q --pre ovos-stt-plugin-onnx-asr ;;
           esac
       # Edda v0.2 (Danish Foundation Models, Apache 2.0): whisper-large-v3-turbo
       # fine-tuned on Danish – converted here to faster-whisper's format, as
