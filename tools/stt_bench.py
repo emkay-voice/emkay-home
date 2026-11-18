@@ -218,7 +218,11 @@ def rescore(r):
 
 
 def report(files):
-    rows = [rescore(json.loads(Path(f).read_text())) for f in files if Path(f).stat().st_size]
+    def last_json(f):
+        # a plugin may print to stdout too; the result is the last JSON line
+        lines = [ln for ln in Path(f).read_text().splitlines() if ln.startswith('{"model"')]
+        return json.loads(lines[-1]) if lines else None
+    rows = [rescore(r) for r in map(last_json, files) if r]
     sets = sorted({s for r in rows for s in r["sets"]})
     head = "| model | peak RAM | load | " + " | ".join(f"{s}: WER · s/clip" for s in sets) + " |"
     lines = [head, "|" + "---|" * (3 + len(sets))]
