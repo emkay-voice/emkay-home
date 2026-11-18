@@ -31,6 +31,27 @@ def client_id(api_key: str) -> str:
     return hashlib.sha256(api_key.encode()).hexdigest()[:16]
 
 
+#: What a paired Emkay may put on the house's bus besides hivemind-core's
+#: defaults (utterances, recording begin/end, …): its answers about itself,
+#: which Home Assistant asks for through the house (ha.py,
+#: andlo/ha-ovos-integration#12). Nothing that makes the house do anything.
+ANSWERS = ["mycroft.volume.get.response", "mycroft.mic.get_status.response"]
+
+
+def allow_answers():
+    """Paired Emkays may answer (ANSWERS) – also those paired before this
+    existed. Run at start; a running hivemind-core sees it at the next
+    connection."""
+    try:
+        with _db() as db:
+            for c in list(db):
+                if _live(c) and not set(ANSWERS) <= set(c.allowed_types or []):
+                    db.add_client(c.name, c.api_key, admin=c.is_admin,
+                                  allowed_types=list(dict.fromkeys([*(c.allowed_types or []), *ANSWERS])))
+    except Exception as e:  # noqa: BLE001 - the house runs without it
+        LOG.warning("could not let the Emkays answer: %s", e)
+
+
 def _live(c):
     # a deleted client stays in the JSON database as api_key "revoked"
     return c.api_key and c.api_key != "revoked" and c.client_id != -1
@@ -56,6 +77,7 @@ def add_client(name: str):
     with _db() as db:
         if not db.add_client(name, key, password=password):
             raise RuntimeError("hivemind-core could not add the client")
+    allow_answers()     # hivemind-core's defaults, and the answers
     return key, password
 
 

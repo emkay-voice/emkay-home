@@ -191,6 +191,35 @@ translation tooling can read them. The page follows the house's language,
 else the browser's. Only English and Danish were written by someone who
 speaks them; the others need a native speaker's look.
 
+## Home Assistant
+
+**Connect to my Home Assistant** on the house page: type Home Assistant's
+address, log in on Home Assistant's own page, and you're back. The house gets
+a long-lived token of its own (nobody types one, and Home Assistant's
+password never passes through the house), kept in `/data/ha.json`.
+**Disconnect** gives the token back to Home Assistant.
+
+Then, with the [OpenVoiceOS integration](https://github.com/andlo/ha-ovos-integration)
+in Home Assistant:
+
+- **The house** is a device there (accept it once under *Discovered*), with
+  its control panel's settings, skills and backups.
+- **Every Emkay** paired with the house is its own device, *connected via*
+  Emkay Home – volume, listening on/off, state, "say" – added when it
+  connects, unavailable while it's away, and gone from Home Assistant when
+  you remove it here. An automation can turn off listening in the bedroom at
+  night without touching the kitchen.
+- **Lights and heating by voice:** the house's OVOS gets
+  [ovos-assist-pipeline-plugin](https://github.com/emkay-voice/ovos-assist-pipeline-plugin),
+  so what Home Assistant's Assist knows ("turn off the light on the stairs")
+  goes to Home Assistant, from every Emkay.
+
+It runs [ovos-phal-plugin-ha-link](https://github.com/andlo/ovos-phal-plugin-ha-link)
+in `emkay_home` (`emkay_home/ha.py`), on the house's bus. The Emkays may put
+their answers about themselves (volume, microphone) on that bus –
+`hive.ANSWERS` in their hivemind-core permissions, also for Emkays paired
+before – and nothing that makes the house do anything.
+
 ## Certificates
 
 A browser gives a page the microphone only over https, and an https page may
