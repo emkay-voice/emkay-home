@@ -82,12 +82,18 @@ jobs:
           node tools/ask.mjs pairing-da.json "hvad er klokken" 120
 
       # Speech in the house (emkay-home#13), as an Emkay uses it: turned on on
-      # the house page, then the house says something and hears it back.
-      # Whisper tiny, to keep the download small.
+      # the house page, then the house says something and hears it back – in
+      # Danish (the house's language by now: NVIDIA's Danish Parakeet) and in
+      # English (the plugin's own English model, loaded on first use).
       - name: Speech in the house
         run: |
-          python3 tools/speak.py "$(hostname -I | awk '{print $1}')" pairing.json --model tiny | tee speech.json
-          python3 -c "import json;d=json.load(open('speech.json'));print(f\"**Speech in the house** (Whisper {d['model']}, {d['hardware']['cores']} cores): says in {d['tts_seconds']} s, hears in {d['stt_seconds']} s – heard “{d['heard']}”\")" >> "$GITHUB_STEP_SUMMARY"
+          ip="$(hostname -I | awk '{print $1}')"
+          python3 tools/speak.py "$ip" pairing.json --lang da-dk --voice da_DK-talesyntese-medium \
+            --say "hvad er klokken" --expect klokken | tee speech-da.json
+          python3 tools/speak.py "$ip" pairing.json | tee speech-en.json
+          for f in speech-da.json speech-en.json; do
+            python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(f\"**Speech in the house** ({d['lang']}, {d['model']}, {d['hardware']['cores']} cores): says in {d['tts_seconds']} s, hears in {d['stt_seconds']} s – heard “{d['heard']}”\")" "$f" >> "$GITHUB_STEP_SUMMARY"
+          done
 
       - if: always()
         name: What the house did

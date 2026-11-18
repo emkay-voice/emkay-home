@@ -166,14 +166,8 @@ async function speech(fill = true) {
   let s;
   try { s = await api("/api/speech"); } catch { return; }
   const hw = s.hardware;
-  if (fill) {
-    for (const r of $("speech").elements.where) r.checked = r.value === s.where;
-    $("speech-model").replaceChildren(...s.models.map((m) => {
-      const o = new Option(m === s.suggested.model ? `${m} ★` : m, m);
-      o.selected = m === s.model;
-      return o;
-    }));
-  }
+  if (fill) for (const r of $("speech").elements.where) r.checked = r.value === s.where;
+  $("speech-hears").textContent = t("speech.hears", { model: s.hears });
   const where = t(s.suggested.where === "house" ? "speech.house" : "speech.phones").toLowerCase();
   $("speech-machine").textContent = t("speech.machine", { cores: hw.cores, mem: hw.mem_gb ?? "?", gpu: hw.gpu ? t("speech.gpu") : "" })
     + " " + t("speech.suggest", { where });
@@ -185,7 +179,7 @@ async function speech(fill = true) {
 $("speech").onsubmit = async (e) => {
   e.preventDefault();
   const f = new FormData(e.target);
-  await api("/api/speech", { where: f.get("where"), model: f.get("model") });
+  await api("/api/speech", { where: f.get("where") });
   show("speech-saved");
   setTimeout(() => show("speech-saved", false), 2000);
   setTimeout(() => speech(false), 500);
