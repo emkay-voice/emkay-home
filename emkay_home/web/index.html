@@ -83,6 +83,23 @@
       </form>
     </section>
 
+    <!-- Home Assistant: the house and its Emkays as devices there (ha.py) -->
+    <section class="card" id="ha-card">
+      <h2 data-i18n="ha.title"></h2>
+      <p class="note" data-i18n="ha.lead"></p>
+      <form id="ha-connect">
+        <label><span data-i18n="ha.url"></span>
+          <input name="url" type="url" required placeholder="http://homeassistant.local:8123"></label>
+        <p class="note" data-i18n="ha.hint"></p>
+        <div class="row"><button type="submit" data-i18n="ha.login"></button></div>
+      </form>
+      <div id="ha-linked" class="hidden">
+        <p class="note" id="ha-state"></p>
+        <div class="row"><button class="ghost" id="ha-disconnect" data-i18n="ha.disconnect"></button></div>
+      </div>
+      <p class="note error hidden" id="ha-error"></p>
+    </section>
+
     <!-- Emkay, served from the house -->
     <section class="card" id="emkay-card">
       <h2 data-i18n="emkay.title"></h2>

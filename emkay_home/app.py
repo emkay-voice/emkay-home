@@ -23,7 +23,7 @@ from pathlib import Path
 
 import tornado.web
 
-from . import hive, house, panel, settings, site, speech
+from . import ha, hive, house, panel, settings, site, speech
 
 LOG = logging.getLogger("emkay-home")
 WEB = Path(__file__).parent / "web"
@@ -283,8 +283,60 @@ class Clients(Base):
 class Remove(Base):
     def post(self):
         self.need_login()
-        if not hive.delete_client(str(self.body().get("id", ""))):
+        cid = str(self.body().get("id", ""))
+        if not hive.delete_client(cid):
             raise tornado.web.HTTPError(404)
+        ha.forget(cid)          # its device in Home Assistant goes too
+        self.write({"ok": True})
+
+
+def _house_base(handler):
+    port = "" if settings.HTTPS_PORT == 443 else f":{settings.HTTPS_PORT}"
+    return f"https://{handler.request.host_name}{port}"
+
+
+class HomeAssistant(Base):
+    """The house and its Emkays in Home Assistant (ha.py)."""
+    def get(self):
+        self.need_login()
+        self.write(ha.status())
+
+    def post(self):
+        """{"url"} -> where the browser logs in to Home Assistant."""
+        self.need_https()
+        self.need_login()
+        try:
+            self.write({"go": ha.login_url(str(self.body().get("url", "")), _house_base(self))})
+        except ValueError:
+            raise tornado.web.HTTPError(400)
+
+
+class HomeAssistantAuth(Base):
+    """Home Assistant's login sends the browser back here with a code.
+
+    The house's sign-in cookie is SameSite=Strict, so it doesn't come along
+    on a navigation from Home Assistant; the state does the job instead: made
+    for a signed-in browser by POST /api/ha, unguessable, used once, ten
+    minutes. Then a page of the house's own moves on to the house page, so
+    the cookie is sent there again."""
+    async def get(self):
+        self.need_https()
+        try:
+            await ha.finish_login(self.get_query_argument("code", ""), self.get_query_argument("state", ""),
+                                  _house_base(self), f"https://{self.request.host_name}:{settings.PANEL_PORT}/")
+            result = "ok"
+        except ha.HAError as e:
+            LOG.warning("Home Assistant login: %s", e)
+            result = "failed"
+        self.set_header("Content-Type", "text/html; charset=utf-8")
+        self.set_header("Referrer-Policy", "no-referrer")     # the code is in this address
+        self.write(f'<!doctype html><meta http-equiv="refresh" content="0;url=/?ha={result}">')
+
+
+class HomeAssistantDisconnect(Base):
+    async def post(self):
+        self.need_login()
+        await ha.disconnect()
         self.write({"ok": True})
 
 
@@ -374,6 +426,9 @@ def make_app():
         (r"/api/speech", Speech),
         (r"/api/speech-auth", SpeechAuth),
         (r"/api/house-info", HouseInfo),
+        (r"/api/ha", HomeAssistant),
+        (r"/api/ha/disconnect", HomeAssistantDisconnect),
+        (r"/ha-auth", HomeAssistantAuth),
         (r"/static/texts\.json", Texts),
         (r"/static/(.*)", tornado.web.StaticFileHandler, {"path": str(WEB)}),
     ], xheaders=False)
