@@ -238,7 +238,7 @@ class Speech(Base):
         self.need_login()
         b = self.body()
         try:
-            speech.choose(b.get("where"), b.get("model") or None)
+            speech.choose(b.get("where"), b.get("model") or None, b.get("voice") or None)
         except ValueError:
             raise tornado.web.HTTPError(400)
         self.write({"ok": True})

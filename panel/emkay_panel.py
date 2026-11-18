@@ -37,7 +37,7 @@ html:root:not([data-emkay]) {
   --radius: 16px;
 }
 nav a[href$="/network"], nav a[href$="/mark1"],
-nav a[href$="/apps"] { display: none !important; }
+nav a[href$="/apps"], nav a[href$="/voice"] { display: none !important; }
 main h2:has(+ .card #wake-test), main .card:has(#wake-test) { display: none !important; }
 </style>"""
 

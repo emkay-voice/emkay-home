@@ -20,6 +20,9 @@ RUN groupadd --gid 1000 emkay && useradd --uid 1000 --gid 1000 -m emkay \
 
 COPY image/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt && rm /tmp/requirements.txt
+# Piper's list of voices (voices.json), for the house's voice on the house
+# page – the plugin itself runs in emkay_home_tts; only its list is read here
+RUN pip install --no-deps --pre ovos-tts-plugin-piper
 
 COPY pyproject.toml README.md LICENSE /src/
 COPY emkay_home /src/emkay_home
