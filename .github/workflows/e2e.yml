@@ -88,8 +88,10 @@ jobs:
       - name: Speech in the house
         run: |
           ip="$(hostname -I | awk '{print $1}')"
+          # a sentence Piper's Danish voice says clearly: its "klokken" comes
+          # out as "kloppen" now and then, which no model can help
           python3 tools/speak.py "$ip" pairing.json --lang da-dk --voice da_DK-talesyntese-medium \
-            --say "hvad er klokken" --expect klokken | tee speech-da.json
+            --say "sluk lyset i køkkenet" --expect køkkenet | tee speech-da.json
           python3 tools/speak.py "$ip" pairing.json | tee speech-en.json
           for f in speech-da.json speech-en.json; do
             python3 -c "import json,sys;d=json.load(open(sys.argv[1]));print(f\"**Speech in the house** ({d['lang']}, {d['model']}, {d['hardware']['cores']} cores): says in {d['tts_seconds']} s, hears in {d['stt_seconds']} s – heard “{d['heard']}”\")" "$f" >> "$GITHUB_STEP_SUMMARY"

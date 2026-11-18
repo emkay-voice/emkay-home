@@ -1,4 +1,5 @@
-"""Speech: on the phones (the default), or in the house.
+"""Speech: on the devices (the default) – each Emkay itself, be it a phone,
+a tablet, a PC browser or a TV – or in the house.
 
 Every Emkay can do speech itself, in the browser. On a strong machine the
 house can do it for all of them instead – better and faster than a phone –
