@@ -29,6 +29,8 @@ def main():
     p.add_argument("--model", default="tiny")
     p.add_argument("--lang", default="en-us")
     p.add_argument("--say", default="what time is it")
+    p.add_argument("--voice", default="en_US-lessac-medium",
+                   help="the Piper voice, as Emkay asks for it (its voiceFor)")
     p.add_argument("--expect", default="time", help="a word the house must hear back")
     p.add_argument("--timeout", type=int, default=900, help="seconds to wait for the models")
     a = p.parse_args()
@@ -68,12 +70,14 @@ def main():
     step(f"  ready after {time.time() - t0:.0f} s – {s['hardware']}")
 
     step("the Emkay asks the house where speech is")
-    with phone.open(urllib.request.Request(base + "/api/speech-info", headers=key), timeout=15) as r:
-        info = json.loads(r.read())["speech"]
+    with phone.open(urllib.request.Request(base + "/api/house-info", headers=key), timeout=15) as r:
+        house = json.loads(r.read())
+    info = house["speech"]
+    assert house["panel"].startswith("https://"), house
     assert info and info["stt"] and info["tts"], info
 
     step("a stranger is turned away")
-    tts_url = info["tts"] + "/v2/synthesize?" + urllib.parse.urlencode({"utterance": a.say, "lang": a.lang})
+    tts_url = info["tts"] + "/v2/synthesize?" + urllib.parse.urlencode({"utterance": a.say, "lang": a.lang, "voice": a.voice})
     try:
         phone.open(tts_url, timeout=15)
         raise AssertionError("speech answered without a key")

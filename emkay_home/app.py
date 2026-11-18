@@ -249,10 +249,14 @@ class SpeechAuth(Base):
         self.set_status(200 if ok else 401)
 
 
-class SpeechInfo(Base):
-    """For a paired Emkay (Bearer: its HiveMind key): whether to use the
-    house's speech, and where – asked when it connects, so phones paired
-    before speech moved into the house learn about it too."""
+def panel_url(host):
+    return f"https://{host}:{settings.PANEL_PORT}/"
+
+
+class HouseInfo(Base):
+    """For a paired Emkay (Bearer: its HiveMind key): what the house offers
+    it – speech (where, or none) and its control panel – asked when it
+    connects, so phones paired earlier learn about it too."""
     def set_default_headers(self):
         super().set_default_headers()
         self.set_header("Access-Control-Allow-Origin", "*")
@@ -265,7 +269,9 @@ class SpeechInfo(Base):
         self.need_https()
         if not hive.has_key(_bearer(self)):
             raise tornado.web.HTTPError(401)
-        self.write({"speech": speech.for_emkay(self.request.host_name), "status": speech.status()["state"]})
+        host = self.request.host_name
+        self.write({"speech": speech.for_emkay(host), "speech_state": speech.status()["state"],
+                    "panel": panel_url(host)})
 
 
 class Clients(Base):
@@ -380,6 +386,7 @@ class Redeem(Base):
         sp = speech.for_emkay(self.request.host_name)
         if sp:
             link["speech"] = sp
+        link["panel"] = panel_url(self.request.host_name)
         b64 = base64.b64encode(json.dumps(link).encode()).decode()
         self.write({"url": f"{site.emkay_url(self.request.host_name)}#hivemind={tornado.escape.url_escape(b64, plus=False)}",
                     "name": inv["name"]})
@@ -418,7 +425,7 @@ def make_app():
         (r"/api/panel-auth", PanelAuth),
         (r"/api/speech", Speech),
         (r"/api/speech-auth", SpeechAuth),
-        (r"/api/speech-info", SpeechInfo),
+        (r"/api/house-info", HouseInfo),
         (r"/api/ha", HomeAssistant),
         (r"/api/ha/disconnect", HomeAssistantDisconnect),
         (r"/ha-auth", HomeAssistantAuth),
