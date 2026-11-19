@@ -16,7 +16,16 @@ of the house it shows the house's panel the same way, so it looks and works
 the same. The panel says frame-ancestors 'none'; here that becomes the
 house's own host, any port (Emkay is served from the house at /emkay/) –
 nobody else may frame it.
+
+And the services the house does not run on purpose: the panel counts ovos-audio
+as a part that must answer, but the house has none – the Emkays are its ears
+and its voice – so a healthy house read "Some parts need attention", with
+Audio in red. mycroft.conf's webui.absent_services (["audio"], set by
+emkay_home's panel.prepare(); proposed for ovos-control-panel itself) names
+them, and they are left out of /api/health – out of the overview and out of
+"healthy". A service that is meant to run and stops answering still shows.
 """
+import ovos_webui.health as health
 import ovos_webui.service as service
 
 #: Emkay's dark palette and blue accent, as on the phone. "html:root:not(
@@ -99,6 +108,33 @@ class EmkayTheme:
 
         return await self.app(scope, receive, wrapped)
 
+
+_snapshot = health.snapshot
+
+
+def absent_services():
+    """What this device does not run on purpose (webui.absent_services)."""
+    try:
+        from ovos_config import Configuration
+        return set((Configuration().get("webui") or {}).get("absent_services") or [])
+    except Exception:  # noqa: BLE001 - no config: nothing is left out
+        return set()
+
+
+def snapshot(bus, timeout=health.DEFAULT_TIMEOUT):
+    """health.snapshot, without the services the device does not run on purpose."""
+    out = _snapshot(bus, timeout)
+    absent = absent_services()
+    if not absent:
+        return out
+    out["services"] = [s for s in out["services"] if s["name"] not in absent]
+    # as health.snapshot decides it, over the core that is there
+    out["healthy"] = out["bus"]["reachable"] and all(
+        s["state"] == "ready" for s in out["services"] if s["name"] in ("skills", "intents", "audio"))
+    return out
+
+
+health.snapshot = snapshot
 
 _create_app = service.create_app
 
