@@ -28,12 +28,32 @@ jobs:
             'echo "{\"https_port\": 8443, \"http_port\": 8480, \"panel_port\": 8500, \"names\": \"\"}" > /data/options.json'
           docker run -d --name addon --network host -v addon_data:/data emkay-home-addon:ci
           for i in $(seq 90); do curl -sf http://127.0.0.1:8480/ca.crt >/dev/null && break; sleep 2; done
-      - name: Walk through it
-        run: python3 tools/smoke.py "$(hostname -I | awk '{print $1}')" --http 8480 --https 8443 --panel 8500
-      - name: OVOS is running too
+      - name: Wait for OpenVoiceOS (skills installed and loaded)
         run: |
-          for i in $(seq 60); do docker logs addon 2>&1 | grep -q "Starting ovos-core" && break; sleep 2; done
-          docker exec addon /command/s6-svstat /run/service/ovos_core /run/service/ovos_messagebus /run/service/emkay_home_panel
+          for i in $(seq 120); do
+            docker exec addon ovos-hc -s skills >/dev/null 2>&1 && exit 0
+            sleep 10
+          done
+          echo "ovos_core never became healthy"; exit 1
+      - name: Walk through it and pair an Emkay
+        run: python3 tools/smoke.py "$(hostname -I | awk '{print $1}')" --http 8480 --https 8443 --panel 8500 > pairing.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Ask the house
+        run: |
+          export NODE_EXTRA_CA_CERTS="$(python3 -c "import json;print(json.load(open('pairing.json'))['ca'])")"
+          node tools/ask.mjs pairing.json "what time is it" 120
+      - name: A restart asked for by the house page (what compose's restarter does)
+        run: |
+          before="$(docker exec addon /command/s6-svstat -p /run/service/ovos_core)"
+          docker exec addon touch /data/requests/restart-ovos_core
+          for i in $(seq 20); do
+            now="$(docker exec addon /command/s6-svstat -p /run/service/ovos_core)"
+            [ -n "$now" ] && [ "$now" != "$before" ] && { echo "ovos_core restarted: $before -> $now"; exit 0; }
+            sleep 2
+          done
+          echo "ovos_core was not restarted"; exit 1
       - if: always()
         run: docker logs addon 2>&1 | tail -200
 
