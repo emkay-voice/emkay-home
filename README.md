@@ -109,6 +109,13 @@ Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
   stay alike) and `mycroft.conf` (ovos-installer's intent pipeline, "about
   Emkay" instead of ovos-skill-personal). After that they are the house's to
   change.
+- **What the house reached on the internet** – `skills.list` adds
+  [ovos-network-log](https://github.com/emkay-voice/ovos-network-log): the
+  house's OVOS (`ovos_core`) writes the same network log as Emkay in the
+  browser, so [Guardian](https://github.com/emkay-voice/ovos-skill-guardian)
+  can answer "what did you send today?" and "what just happened?" for the
+  house too. Host names and amounts only – never addresses, questions or
+  answers.
 - **hivemind-core** is used through its own client database, like
   `hivemind-core add-client` – a house set up here can still be looked after
   with the stock CLI (`docker exec -it emkay_home hivemind-core list-clients`).

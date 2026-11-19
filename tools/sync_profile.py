@@ -23,9 +23,13 @@ RAW = "https://raw.githubusercontent.com/emkay-voice/emkay/{ref}/requirements/br
 
 #: what the house keeps from Emkay's list
 KEEP = re.compile(r"^(ovos-core\[skills|ovos-skill-|ovos-media-provider-|ovos-common-[a-z-]+-pipeline-plugin)")
-#: browser-only: the page does what these ask for (full screen, the
-#: network log of the browser) – a house has no page of its own
-BROWSER_ONLY = {"ovos-skill-kiosk", "ovos-skill-guardian"}
+#: browser-only: the page does what these ask for (full screen) – a house
+#: has no page of its own
+BROWSER_ONLY = {"ovos-skill-kiosk"}
+#: what the house adds: Emkay's network log for an ordinary OVOS, so
+#: ovos-skill-guardian can say what the house's OVOS reached on the internet
+#: (in the browser, the page keeps that log itself)
+HOUSE_ONLY = ["ovos-network-log"]
 
 
 def main():
@@ -45,13 +49,15 @@ def main():
         name = re.split(r"[<>=!~\[ ;]", req, maxsplit=1)[0]
         if req and KEEP.match(req) and name not in BROWSER_ONLY:
             keep.append(req)
+    keep += HOUSE_ONLY
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(
         "# Emkay's skills, for the house (ovos_core installs these at start).\n"
         f"# Made by tools/sync_profile.py from {source.replace('https://raw.githubusercontent.com/', '')}\n"
         "# – edit Emkay's list, not this one. Left out here: "
-        + ", ".join(sorted(BROWSER_ONLY)) + " (browser-only).\n"
+        + ", ".join(sorted(BROWSER_ONLY)) + " (browser-only). Added: "
+        + ", ".join(HOUSE_ONLY) + ".\n"
         + "\n".join(keep) + "\n")
     print(f"{OUT}: {len(keep)} lines", file=sys.stderr)
 
