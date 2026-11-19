@@ -43,6 +43,12 @@ def prepare():
     if not webui.get("access_token"):
         webui["access_token"] = secrets.token_urlsafe(32)
         changed = True
+    # no ovos-audio in the house (the Emkays speak), so the panel must not
+    # call it broken (panel/emkay_panel.py). Set once: a house that speaks
+    # itself one day takes "audio" out of the list again.
+    if "absent_services" not in webui:
+        webui["absent_services"] = ["audio"]
+        changed = True
     names = set(webui.get("hostnames") or [])
     want = {f"{socket.gethostname()}.local", *settings.EXTRA_NAMES}
     if not want <= names:
