@@ -1,0 +1,6 @@
+#!/command/with-contenv bash
+# the OVOS control panel in Emkay's colours (panel/), behind Caddy
+wait-for-house
+export HOME=/data/ovos OVOS_WEBUI_HOST=127.0.0.1 OVOS_WEBUI_PORT=8599
+cd "$HOME"
+exec s6-setuidgid ovos /opt/panel/bin/python /opt/emkay/emkay_panel.py

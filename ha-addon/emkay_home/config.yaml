@@ -1,0 +1,41 @@
+# Emkay Home as a Home Assistant add-on: the same house as the normal
+# installation (compose/), in one container – see Dockerfile and DOCS.md.
+name: Emkay Home
+version: "0.1.0"
+slug: emkay_home
+description: The OpenVoiceOS for the house – every Emkay in it a satellite
+url: https://emkay.ai/home/
+arch:
+  - amd64
+  - aarch64
+image: ghcr.io/emkay-voice/emkay-home-addon
+init: false
+startup: application
+boot: auto
+# Emkays find and reach the house on the network as they do with the normal
+# installation: https on its own port, HiveMind behind it
+host_network: true
+webui: "https://[HOST]:[PORT:8443]/"
+ports:
+  8443/tcp: 8443
+  8480/tcp: 8480
+  8500/tcp: 8500
+ports_description:
+  8443/tcp: The house page and the Emkays (https)
+  8480/tcp: The welcome page – trust the house's certificate (http)
+  8500/tcp: The OpenVoiceOS control panel (https)
+options:
+  https_port: 8443
+  http_port: 8480
+  panel_port: 8500
+  names: ""
+schema:
+  https_port: port
+  http_port: port
+  panel_port: port
+  names: str?
+# downloaded again when needed – kept out of Home Assistant's backups
+backup_exclude:
+  - speech-home/.cache
+  - speech-home/.local/share
+  - emkay-site

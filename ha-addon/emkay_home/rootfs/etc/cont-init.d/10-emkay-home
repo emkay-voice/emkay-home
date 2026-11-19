@@ -1,0 +1,29 @@
+#!/command/with-contenv bash
+# Emkay Home's storage under /data (the add-on's own, in Home Assistant's
+# backups), and the add-on's options as the environment of the services.
+set -euo pipefail
+D=/data
+mkdir -p "$D"/{home,requests,speech,emkay-site,xdg-config} \
+  "$D"/ovos/.config/{mycroft,ovos_persona} "$D"/ovos/.local/{share,state}/mycroft "$D"/ovos/nltk_data \
+  "$D"/emkay/.config/hivemind-core "$D"/emkay/.local/share/hivemind-core \
+  "$D"/speech-home/{.config,.cache,.local/share}
+# hivemind-core reads the house's OVOS config (compose mounts it the same way);
+# the speech servers read what emkay_home writes for them
+[ -L "$D/emkay/.config/mycroft" ] || ln -s "$D/ovos/.config/mycroft" "$D/emkay/.config/mycroft"
+[ -L "$D/speech-home/.config/mycroft" ] || ln -s "$D/speech" "$D/speech-home/.config/mycroft"
+rm -f "$D"/requests/restart-*
+chown -R 1000:1000 "$D"/{home,requests,speech,emkay-site,ovos,emkay,speech-home}
+
+# options.json (Home Assistant writes it) → the services' environment
+/opt/emkay/bin/python - <<'EOF'
+import json, pathlib
+try:
+    o = json.load(open("/data/options.json"))
+except (OSError, ValueError):
+    o = {}
+env = pathlib.Path("/run/s6/container_environment")
+for key, name, default in (("https_port", "HTTPS_PORT", 8443), ("http_port", "HTTP_PORT", 8480),
+                           ("panel_port", "PANEL_PORT", 8500), ("names", "EMKAY_HOME_NAMES", "")):
+    (env / name).write_text(str(o.get(key) or default))
+print("Emkay Home: https on", o.get("https_port") or 8443)
+EOF

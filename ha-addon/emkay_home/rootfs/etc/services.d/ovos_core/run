@@ -1,0 +1,6 @@
+#!/command/with-contenv bash
+# ovos-docker's own entrypoint: installs skills.list, then ovos-core
+wait-for-house
+export HOME=/data/ovos
+cd "$HOME"
+exec s6-setuidgid ovos bash /usr/local/bin/entrypoint.sh

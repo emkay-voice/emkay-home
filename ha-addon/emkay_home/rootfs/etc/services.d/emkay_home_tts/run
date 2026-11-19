@@ -1,0 +1,6 @@
+#!/command/with-contenv bash
+# speech in the house (speech/run.sh) – waits idle while speech is on the devices
+wait-for-house
+export HOME=/data/speech-home PATH="/opt/speech/bin:$PATH"
+cd "$HOME"
+exec s6-setuidgid ovos bash /opt/emkay/speech.sh tts
