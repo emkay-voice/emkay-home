@@ -48,14 +48,24 @@ jobs:
         run: |
           before="$(docker exec addon /command/s6-svstat -p /run/service/ovos_core)"
           docker exec addon touch /data/requests/restart-ovos_core
-          for i in $(seq 20); do
+          for i in $(seq 40); do
             now="$(docker exec addon /command/s6-svstat -p /run/service/ovos_core)"
-            [ -n "$now" ] && [ "$now" != "$before" ] && { echo "ovos_core restarted: $before -> $now"; exit 0; }
+            [ -n "$now" ] && [ "$now" != "-1" ] && [ "$now" != "$before" ] && { echo "ovos_core restarted: $before -> $now"; exit 0; }
             sleep 2
           done
           echo "ovos_core was not restarted"; exit 1
       - if: always()
-        run: docker logs addon 2>&1 | tail -200
+        name: How the services are
+        run: |
+          for s in emkay_home ovos_messagebus ovos_core emkay_home_panel emkay_home_stt emkay_home_tts caddy restarter; do
+            echo "$s: $(docker exec addon /command/s6-svstat /run/service/$s)"
+          done
+          docker logs addon > addon.log 2>&1; tail -150 addon.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: addon-log
+          path: addon.log
 
   publish:
     if: github.event_name == 'push'
