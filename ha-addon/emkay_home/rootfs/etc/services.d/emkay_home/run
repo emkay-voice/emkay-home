@@ -1,0 +1,6 @@
+#!/command/with-contenv bash
+# hivemind-core and the house page (image/Dockerfile)
+export HOME=/data/emkay EMKAY_HOME_DATA=/data/home EMKAY_HOME_OVOS_CONFIG=/data/ovos/.config/mycroft \
+       EMKAY_HOME_REQUESTS=/data/requests EMKAY_HOME_SPEECH=/data/speech EMKAY_HOME_SITE=/data/emkay-site
+cd "$HOME"
+exec s6-setuidgid ovos /opt/emkay/bin/emkay-home

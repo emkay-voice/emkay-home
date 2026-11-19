@@ -1,0 +1,5 @@
+#!/command/with-contenv bash
+wait-for-house
+export HOME=/data/ovos
+cd "$HOME"
+exec s6-setuidgid ovos /home/ovos/.venv/bin/ovos-messagebus

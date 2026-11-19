@@ -1,0 +1,13 @@
+#!/command/with-contenv bash
+# What compose's emkay_home_restarter does with Docker, s6 does here:
+# restart ovos_core (a new language) and the speech servers (a new choice)
+while :; do
+  for c in ovos_core emkay_home_stt emkay_home_tts; do
+    if [ -f "/data/requests/restart-$c" ]; then
+      rm -f "/data/requests/restart-$c"
+      echo "$(date '+%F %T') restarting $c"
+      s6-svc -r "/run/service/$c"
+    fi
+  done
+  sleep 3
+done

@@ -1,0 +1,5 @@
+#!/command/with-contenv bash
+# one https address for the house (caddy/Caddyfile); its CA is in /data/caddy
+wait-for-house
+export XDG_DATA_HOME=/data XDG_CONFIG_HOME=/data/xdg-config
+exec caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
