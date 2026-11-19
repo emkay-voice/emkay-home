@@ -3,9 +3,8 @@
 The OpenVoiceOS for the house, with every Emkay in it – phone, tablet, PC or
 TV – as its satellite. This add-on is the same house as the normal
 installation ([emkay.ai/home](https://emkay.ai/home/)), in one container on
-your Home Assistant. The normal installation is still the one we recommend
-when you have another machine that is always on; the add-on is for when Home
-Assistant is that machine.
+your Home Assistant – an option when the machine Home Assistant runs on has
+power to spare for the house too.
 
 ## Set it up
 
