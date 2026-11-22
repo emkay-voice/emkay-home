@@ -63,7 +63,7 @@ RUN python -m venv /opt/emkay \
 COPY panel/system.conf /opt/emkay/system.conf
 COPY panel/emkay-logo.svg /opt/emkay/emkay-logo.svg
 RUN python -m venv /opt/panel \
- && /opt/panel/bin/pip install --no-cache-dir --pre "ovos-control-panel>=0.0.1a92" -c /tmp/constraints.txt \
+ && /opt/panel/bin/pip install --no-cache-dir --pre "ovos-control-panel>=0.0.1a98" -c /tmp/constraints.txt \
  && /opt/panel/bin/pip install --no-cache-dir --no-deps /src \
  && rm -rf /src
 

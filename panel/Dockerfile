@@ -29,7 +29,7 @@ RUN groupadd --gid 1000 ovos && useradd --uid 1000 --gid 1000 -m ovos \
 
 # the alpha channel, as the panel and Emkay follow it
 ARG OVOS_RELEASES_REF=main
-RUN pip install --pre "ovos-control-panel>=0.0.1a92" \
+RUN pip install --pre "ovos-control-panel>=0.0.1a98" \
       -c "https://raw.githubusercontent.com/OpenVoiceOS/ovos-releases/${OVOS_RELEASES_REF}/constraints-alpha.txt"
 
 # Emkay Home as a distribution of the panel: its system layer of
