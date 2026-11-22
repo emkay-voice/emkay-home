@@ -56,13 +56,16 @@ COPY emkay_home /src/emkay_home
 RUN python -m venv /opt/emkay \
  && /opt/emkay/bin/pip install --no-cache-dir -r /tmp/emkay-requirements.txt \
  && /opt/emkay/bin/pip install --no-cache-dir --no-deps --pre ovos-tts-plugin-piper \
- && /opt/emkay/bin/pip install --no-cache-dir --no-deps /src \
- && rm -rf /src
+ && /opt/emkay/bin/pip install --no-cache-dir --no-deps /src
 
-# the control panel (panel/Dockerfile)
-COPY panel/emkay_panel.py /opt/emkay/emkay_panel.py
+# the control panel (panel/Dockerfile), with emkay_home for its page (the
+# Emkays in the house: only its controlpanel.json is read there)
+COPY panel/system.conf /opt/emkay/system.conf
+COPY panel/emkay-logo.svg /opt/emkay/emkay-logo.svg
 RUN python -m venv /opt/panel \
- && /opt/panel/bin/pip install --no-cache-dir --pre ovos-control-panel -c /tmp/constraints.txt
+ && /opt/panel/bin/pip install --no-cache-dir --pre "ovos-control-panel>=0.0.1a92" -c /tmp/constraints.txt \
+ && /opt/panel/bin/pip install --no-cache-dir --no-deps /src \
+ && rm -rf /src
 
 # speech in the house (speech/Dockerfile)
 COPY speech/run.sh /opt/emkay/speech.sh

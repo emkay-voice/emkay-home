@@ -142,7 +142,9 @@ Emkay Home is a profile and a page on top of stock OpenVoiceOS, not a fork:
 ### The control panel
 
 The OVOS in the house is looked after with OpenVoiceOS' own control panel, in
-Emkay's colours as in Emkay itself ([`panel/emkay_panel.py`](panel/emkay_panel.py)) –
+Emkay's look as in Emkay itself, set the way any distribution of the panel sets
+it: in its own system layer of `mycroft.conf` ([`panel/system.conf`](panel/system.conf)),
+with no ovos-audio in the house and the house's own setup guide –
 skills and plugins, settings, logs, the message bus – at
 `https://<house>:8500/` ("Control panel" on the house page). It sits behind
 the house page's sign-in: Caddy asks `emkay_home` first (`forward_auth`), and
@@ -151,6 +153,15 @@ password for the whole house and the token is never shown. A browser that
 isn't signed in is sent to the house page and back. The panel edits the same
 `mycroft.conf` as `ovos_core` and asks ovos-core to install skills, so they
 land where they run. `PANEL_PORT` in `.env` moves it.
+
+The panel also has a page of the house's own, **Your Emkays**
+([`emkay_home/controlpanel.json`](emkay_home/controlpanel.json)): add an
+Emkay with a QR code (drawn by the panel, a one-time code that works for ten
+minutes), give the Emkays in the house names, and remove one. It is the same
+as on the house page, and the panel's setup guide has it as a step. The page
+talks to `emkay_home` over OpenVoiceOS' message bus
+([`emkay_home/panelpage.py`](emkay_home/panelpage.py)); the panel only reads
+the file.
 
 ### Speech: on the devices, or in the house
 

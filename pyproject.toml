@@ -25,4 +25,4 @@ packages = ["emkay_home"]
 version = { attr = "emkay_home.__version__" }
 
 [tool.setuptools.package-data]
-emkay_home = ["web/*", "profile/*", "locale/*/*.dialog"]
+emkay_home = ["web/*", "profile/*", "locale/*/*.dialog", "locale/*/controlpanel.json", "controlpanel.json", "controlpanel.svg"]

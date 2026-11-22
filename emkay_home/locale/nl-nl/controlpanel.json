@@ -1,0 +1,16 @@
+{
+ "emkay-home.title": "Je Emkays",
+ "emkay-home.add.title": "Een Emkay toevoegen",
+ "emkay-home.add.show": "QR-code tonen",
+ "emkay-home.list.title": "Je Emkays",
+ "emkay-home.list.empty": "Nog geen Emkays.",
+ "emkay-home.list.remove": "Verwijderen",
+ "emkay-home.list.status.never": "Nog niet verbonden",
+ "emkay-home.list.status.seen": "Laatst gezien {last_seen:time}",
+ "emkay-home.add.intro": "Toon de code en scan hem met de camera van de telefoon of tablet. Een naam kun je hem daarna geven.",
+ "emkay-home.add.note": "De code werkt {minutes} minuten, voor één Emkay.",
+ "emkay-home.list.confirm": "Deze Emkay verwijderen? Hij kan het huis dan niet meer bereiken.",
+ "emkay-home.err.name": "Geef hem een naam.",
+ "emkay-home.err.gone": "Die Emkay is niet meer met het huis verbonden.",
+ "emkay-home.err.failed": "Dat lukte niet. Het logboek van het huis zegt waarom."
+}

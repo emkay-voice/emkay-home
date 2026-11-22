@@ -1,5 +1,6 @@
 # emkay-home-panel: the stock OpenVoiceOS control panel (ovos-control-panel),
-# for the OVOS in the house, in Emkay's colours as on the phone. It talks to
+# for the OVOS in the house, as it is: Emkay's look, the house's guide and
+# what the house leaves out come from its own system layer (panel/system.conf). It talks to
 # OVOS over the message bus and edits the same config the ovos_core container
 # uses (the shared ovos_config volume); installing skills and plugins it asks ovos-core to do
 # (ovos.pip.install), so they land where they run.
@@ -28,11 +29,22 @@ RUN groupadd --gid 1000 ovos && useradd --uid 1000 --gid 1000 -m ovos \
 
 # the alpha channel, as the panel and Emkay follow it
 ARG OVOS_RELEASES_REF=main
-RUN pip install --pre ovos-control-panel \
+RUN pip install --pre "ovos-control-panel>=0.0.1a92" \
       -c "https://raw.githubusercontent.com/OpenVoiceOS/ovos-releases/${OVOS_RELEASES_REF}/constraints-alpha.txt"
 
-# the stock panel with Emkay's colours (panel/emkay_panel.py)
-COPY panel/emkay_panel.py /opt/emkay/emkay_panel.py
+# Emkay Home as a distribution of the panel: its system layer of
+# mycroft.conf (name, eyes and colours as in Emkay, a dark theme, no
+# ovos-audio in the house, Emkay may show it in a frame, the house's setup
+# guide). Only the panel reads it (MYCROFT_SYSTEM_CONFIG); what is chosen on
+# the panel's own Control panel page goes in the user layer and wins.
+# emkay_home itself, for its page (the Emkays in the house): only its
+# controlpanel.json is read here; the page talks to emkay_home over the bus
+COPY pyproject.toml README.md LICENSE /src/
+COPY emkay_home /src/emkay_home
+RUN pip install --no-deps /src && rm -rf /src
+COPY panel/system.conf /opt/emkay/system.conf
+COPY panel/emkay-logo.svg /opt/emkay/emkay-logo.svg
+ENV MYCROFT_SYSTEM_CONFIG=/opt/emkay/system.conf
 
 USER ovos
 WORKDIR /home/ovos
@@ -42,4 +54,4 @@ ENV OVOS_WEBUI_HOST=127.0.0.1 OVOS_WEBUI_PORT=8599
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8599/healthz', timeout=4)" || exit 1
 
-ENTRYPOINT ["python", "/opt/emkay/emkay_panel.py"]
+ENTRYPOINT ["ovos-control-panel"]

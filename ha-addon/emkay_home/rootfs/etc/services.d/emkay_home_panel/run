@@ -1,6 +1,8 @@
 #!/command/with-contenv bash
-# the OVOS control panel in Emkay's colours (panel/), behind Caddy
+# the stock OVOS control panel, behind Caddy; Emkay Home's look and guide
+# come from its own system layer (panel/system.conf), read by the panel only
 wait-for-house
 export HOME=/data/ovos OVOS_WEBUI_HOST=127.0.0.1 OVOS_WEBUI_PORT=8599
+export MYCROFT_SYSTEM_CONFIG=/opt/emkay/system.conf
 cd "$HOME"
-exec s6-setuidgid ovos /opt/panel/bin/python /opt/emkay/emkay_panel.py
+exec s6-setuidgid ovos /opt/panel/bin/ovos-control-panel

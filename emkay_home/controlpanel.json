@@ -1,0 +1,47 @@
+{
+ "controlpanel": 1,
+ "id": "emkay-home",
+ "title": "emkay-home.title",
+ "group": "everyday",
+ "order": 25,
+ "icon": "controlpanel.svg",
+ "bus": "ovos.emkay_home.",
+ "blocks": [
+  {
+   "type": "qr",
+   "heading": "emkay-home.add.title",
+   "text": "emkay-home.add.intro",
+   "action": {
+    "label": "emkay-home.add.show",
+    "send": "ovos.emkay_home.pair",
+    "host": true
+   },
+   "field": "url",
+   "expires": "seconds",
+   "note": "emkay-home.add.note"
+  },
+  {
+   "type": "list",
+   "heading": "emkay-home.list.title",
+   "query": "ovos.emkay_home.devices",
+   "items": "items",
+   "key": "id",
+   "title": "{name}",
+   "text": "{status@emkay-home.list.status}",
+   "empty": "emkay-home.list.empty",
+   "refresh": 10,
+   "rename": {
+    "field": "name",
+    "send": "ovos.emkay_home.device.rename",
+    "max_length": 40
+   },
+   "actions": [
+    {
+     "label": "emkay-home.list.remove",
+     "send": "ovos.emkay_home.device.remove",
+     "confirm": "emkay-home.list.confirm"
+    }
+   ]
+  }
+ ]
+}
