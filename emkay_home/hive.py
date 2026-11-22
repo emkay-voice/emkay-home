@@ -89,6 +89,15 @@ def has_key(api_key: str) -> bool:
         return any(_live(c) and secrets.compare_digest(c.api_key, api_key) for c in db)
 
 
+def rename_client(cid: str, name: str) -> bool:
+    """Give a paired Emkay another name; its key and password stay."""
+    with _db() as db:
+        for c in db:
+            if _live(c) and client_id(c.api_key) == cid:
+                return bool(db.add_client(name, c.api_key, admin=c.is_admin))
+    return False
+
+
 def delete_client(cid: str) -> bool:
     with _db() as db:
         for c in db:

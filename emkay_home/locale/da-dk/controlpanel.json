@@ -1,0 +1,16 @@
+{
+ "emkay-home.title": "Dine Emkays",
+ "emkay-home.add.title": "Tilføj en Emkay",
+ "emkay-home.add.show": "Vis QR-kode",
+ "emkay-home.list.title": "Dine Emkays",
+ "emkay-home.list.empty": "Ingen Emkays endnu.",
+ "emkay-home.list.remove": "Fjern",
+ "emkay-home.list.status.never": "Ikke forbundet endnu",
+ "emkay-home.list.status.seen": "Sidst set {last_seen:time}",
+ "emkay-home.add.intro": "Vis koden, og scan den med telefonens eller tablettens kamera. Du kan give den et navn bagefter.",
+ "emkay-home.add.note": "Koden virker i {minutes} minutter, til én Emkay.",
+ "emkay-home.list.confirm": "Fjern denne Emkay? Den kan ikke længere nå huset.",
+ "emkay-home.err.name": "Giv den et navn.",
+ "emkay-home.err.gone": "Den Emkay er ikke længere forbundet med huset.",
+ "emkay-home.err.failed": "Det lykkedes ikke. Husets log siger hvorfor."
+}

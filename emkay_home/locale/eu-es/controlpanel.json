@@ -1,0 +1,16 @@
+{
+ "emkay-home.title": "Zure Emkayak",
+ "emkay-home.add.title": "Gehitu Emkay bat",
+ "emkay-home.add.show": "Erakutsi QR kodea",
+ "emkay-home.list.title": "Zure Emkayak",
+ "emkay-home.list.empty": "Oraindik ez dago Emkayrik.",
+ "emkay-home.list.remove": "Kendu",
+ "emkay-home.list.status.never": "Oraindik konektatu gabe",
+ "emkay-home.list.status.seen": "Azkenekoz ikusia: {last_seen:time}",
+ "emkay-home.add.intro": "Erakutsi kodea eta eskaneatu telefonoaren edo tabletaren kamerarekin. Gero izen bat jar diezaiokezu.",
+ "emkay-home.add.note": "Kodeak {minutes} minutuz balio du, Emkay batentzat.",
+ "emkay-home.list.confirm": "Emkay hau kendu? Ezingo da etxera iritsi.",
+ "emkay-home.err.name": "Jarri izen bat.",
+ "emkay-home.err.gone": "Emkay hori ez dago etxearekin lotuta.",
+ "emkay-home.err.failed": "Ez du funtzionatu. Etxearen erregistroak dio zergatik."
+}

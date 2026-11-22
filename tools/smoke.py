@@ -128,8 +128,14 @@ def main():
                 time.sleep(2)
         else:
             raise AssertionError("the control panel never came up")
-        with web.open(panel_base + "/", timeout=30) as r:
-            assert b'id="emkay-theme"' in r.read(), "the panel is not in Emkay's colours"
+        # the stock panel, branded from panel/system.conf (webui.branding)
+        step("control panel: in Emkay's colours, with its name")
+        with web.open(panel_base + "/static/branding.css", timeout=30) as r:
+            assert b"#22a7f0" in r.read(), "the panel is not in Emkay's colours"
+        with web.open(panel_base + "/api/pages", timeout=30) as r:
+            brand = json.loads(r.read()).get("branding", {})
+            assert brand.get("name") == "Emkay Home", f"the panel is called {brand.get('name')!r}"
+            assert not brand.get("warnings"), brand["warnings"]
 
     print(json.dumps({"link": link, "ca": f.name, "client_id": me[-1]["id"]}))
 

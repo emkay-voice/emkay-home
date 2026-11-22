@@ -1,0 +1,16 @@
+{
+ "emkay-home.title": "Os teus Emkay",
+ "emkay-home.add.title": "Engadir un Emkay",
+ "emkay-home.add.show": "Amosar o código QR",
+ "emkay-home.list.title": "Os teus Emkay",
+ "emkay-home.list.empty": "Aínda non hai ningún Emkay.",
+ "emkay-home.list.remove": "Quitar",
+ "emkay-home.list.status.never": "Aínda non conectado",
+ "emkay-home.list.status.seen": "Visto por última vez {last_seen:time}",
+ "emkay-home.add.intro": "Amosa o código e escanéao coa cámara do teléfono ou da tableta. Despois podes poñerlle un nome.",
+ "emkay-home.add.note": "O código vale durante {minutes} minutos, para un Emkay.",
+ "emkay-home.list.confirm": "Quitar este Emkay? Xa non poderá chegar á casa.",
+ "emkay-home.err.name": "Ponlle un nome.",
+ "emkay-home.err.gone": "Ese Emkay xa non está vinculado á casa.",
+ "emkay-home.err.failed": "Non funcionou. O rexistro da casa di por que."
+}

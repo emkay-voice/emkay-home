@@ -1,0 +1,16 @@
+{
+ "emkay-home.title": "Your Emkays",
+ "emkay-home.add.title": "Add an Emkay",
+ "emkay-home.add.show": "Show QR code",
+ "emkay-home.list.title": "Your Emkays",
+ "emkay-home.list.empty": "No Emkays yet.",
+ "emkay-home.list.remove": "Remove",
+ "emkay-home.list.status.never": "Not connected yet",
+ "emkay-home.list.status.seen": "Last seen {last_seen:time}",
+ "emkay-home.add.intro": "Show the code, then scan it with the camera of the phone or tablet. You can give it a name afterwards.",
+ "emkay-home.add.note": "The code works for {minutes} minutes, for one Emkay.",
+ "emkay-home.list.confirm": "Remove this Emkay? It can no longer reach the house.",
+ "emkay-home.err.name": "Give it a name.",
+ "emkay-home.err.gone": "That Emkay is not paired with the house any more.",
+ "emkay-home.err.failed": "That did not work. The house's log says why."
+}

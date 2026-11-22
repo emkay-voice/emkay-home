@@ -7,7 +7,7 @@ import argparse
 import asyncio
 import logging
 
-from . import app, ha, hive, house, panel, settings, site, speech
+from . import app, ha, hive, house, panel, panelpage, settings, site, speech
 
 
 async def main(run_hivemind=True):
@@ -24,6 +24,8 @@ async def main(run_hivemind=True):
         tasks.append(asyncio.create_task(hive.keep_running()))
     # the house in Home Assistant, if it has been connected (ha.py)
     tasks.append(asyncio.create_task(ha.start()))
+    # the Emkays in the house, as a page of the house's control panel
+    panelpage.start()
     await asyncio.Event().wait()
 
 

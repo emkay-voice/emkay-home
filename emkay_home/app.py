@@ -348,19 +348,27 @@ class HomeAssistantDisconnect(Base):
         self.write({"ok": True})
 
 
+def new_invite(name: str, host: str) -> dict:
+    """A one-time code for "Add an Emkay", and the link a phone opens with it
+    (http on the house's own name, so a phone that doesn't trust the house's
+    certificate yet still gets there; pair.js goes on over https). Used by
+    the house page and by the house's control panel (panelpage.py)."""
+    _prune()
+    name = str(name or "").strip()[:40] or "Emkay"
+    code = secrets.token_urlsafe(18)
+    INVITES[code] = {"name": name, "expires": time.time() + settings.INVITE_SECONDS, "paired": False}
+    port = "" if settings.HTTP_PORT == 80 else f":{settings.HTTP_PORT}"
+    return {"code": code, "url": f"http://{host}{port}/#t={code}", "seconds": settings.INVITE_SECONDS}
+
+
 class Invite(Base):
     """A one-time code for "Add an Emkay", as a QR code."""
     def post(self):
         self.need_login()
         import segno
-        _prune()
-        name = str(self.body().get("name", "")).strip()[:40] or "Emkay"
-        code = secrets.token_urlsafe(18)
-        INVITES[code] = {"name": name, "expires": time.time() + settings.INVITE_SECONDS, "paired": False}
-        port = "" if settings.HTTP_PORT == 80 else f":{settings.HTTP_PORT}"
-        url = f"http://{self.host}{port}/#t={code}"
-        svg = segno.make(url, error="m").svg_inline(scale=8, border=2, dark="#05070a", light="#ffffff")
-        self.write({"code": code, "url": url, "qr": svg, "seconds": settings.INVITE_SECONDS})
+        inv = new_invite(self.body().get("name", ""), self.host)
+        svg = segno.make(inv["url"], error="m").svg_inline(scale=8, border=2, dark="#05070a", light="#ffffff")
+        self.write({**inv, "qr": svg})
 
     def get(self):
         """Whether the code has been used – the page closes the QR code then."""
