@@ -9,7 +9,8 @@ LABEL org.opencontainers.image.title="Emkay Home" \
       org.opencontainers.image.description="The OpenVoiceOS for the house that Emkays are satellites of: hivemind-core and the pairing page" \
       org.opencontainers.image.source="https://github.com/emkay-voice/emkay-home" \
       org.opencontainers.image.url="https://emkay.ai" \
-      org.opencontainers.image.licenses="Apache-2.0"
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.vendor="emkay-voice"
 
 ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PIP_ROOT_USER_ACTION=ignore
 

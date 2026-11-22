@@ -225,7 +225,7 @@ in Home Assistant:
   so what Home Assistant's Assist knows ("turn off the light on the stairs")
   goes to Home Assistant, from every Emkay.
 
-It runs [ovos-phal-plugin-ha-link](https://github.com/andlo/ovos-phal-plugin-ha-link)
+It runs [ovos-phal-plugin-ha-link](https://github.com/emkay-voice/ovos-phal-plugin-ha-link)
 in `emkay_home` (`emkay_home/ha.py`), on the house's bus. The Emkays may put
 their answers about themselves (volume, microphone) on that bus –
 `hive.ANSWERS` in their hivemind-core permissions, also for Emkays paired
